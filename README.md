@@ -1,7 +1,9 @@
-![logo](docs/devka.png)
+<p align="center">
+  <img src="docs/devka.png" alt="Logo" />
+</p>
 
 <h1 align="center">Devka</h1>
-<p />
+
 ### What is Devka?
 **Devka** is an interactive automation toolset for developers.
 
