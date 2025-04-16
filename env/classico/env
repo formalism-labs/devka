@@ -1,0 +1,6 @@
+# Classico
+
+. $CLASSICO/shibumi/functions
+
+export CLASSICO_PATH=$CLASSICO/bin
+

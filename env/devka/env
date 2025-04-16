@@ -1,0 +1,3 @@
+# Devka
+
+export DEVKA_PATH=$HOME/.devka/bin:$DEVKA/bin

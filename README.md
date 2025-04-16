@@ -1,11 +1,11 @@
 <p align="center">
   <img src="docs/devka.png" alt="Logo" />
 </p>
-
 <h1 align="center">Devka</h1>
 
 ### What is Devka?
 **Devka** is an interactive automation toolset for developers.
+It is pronouced `/ˈdɛv.kə/`. You can try, at your own risk, pronouncing it according to its Russian origins.
 
 ### It can help you to:
 * Neatly arrange the configuration of your machines (physical and virtual) and containers.
