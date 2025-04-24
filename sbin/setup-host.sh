@@ -13,12 +13,12 @@ cd $HOME
 if [[ ! -d .devka ]]; then
 	git clone --recurse-submodule https://github.com/formalism-labs/devka.git .devka
 else
-	git pull
+	git -C .devka pull --recurse-submodule
 fi
 if [[ ! -d .devka-user ]]; then
 	git clone https://github.com/${DEVKA_USER_REPO}.git .devka-user
 else
-	git pull
+	git -C .devka-user pull
 fi
 
 ./.devka/sbin/setup
