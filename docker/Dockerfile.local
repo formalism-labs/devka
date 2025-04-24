@@ -1,0 +1,21 @@
+FROM ubuntu:noble
+
+SHELL ["/bin/bash", "-l", "-c"]
+
+WORKDIR /build
+
+COPY --from=devka . /root/.devka
+COPY --from=devka-user . /root/.devka-user
+
+WORKDIR /root/.devka
+RUN ./sbin/setup
+
+# for debugging
+RUN mixenv classico ;\
+	getbashdb ;\
+	getpudb ;\
+	runn apt-get install -y mc vim htop tmux
+
+WORKDIR /root
+
+CMD ["/bin/bash", "-l"]
