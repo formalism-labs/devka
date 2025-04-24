@@ -10,7 +10,15 @@ fi
 DEVKA_USER_REPO=${DEVKA_USER_REPO:-formalism-labs/devka-user}
 
 cd $HOME
-git clone --recurse-submodule https://github.com/formalism-labs/devka.git .devka
-git clone https://github.com/${DEVKA_USER_REPO}.git .devka-user
+if [[ ! -d .devka ]]; then
+	git clone --recurse-submodule https://github.com/formalism-labs/devka.git .devka
+else
+	git pull
+fi
+if [[ ! -d .devka-user ]]; then
+	git clone https://github.com/${DEVKA_USER_REPO}.git .devka-user
+else
+	git pull
+fi
 
 ./.devka/sbin/setup
