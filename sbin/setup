@@ -3,7 +3,32 @@
 PROGNAME="${BASH_SOURCE[0]}"
 HERE="$(cd "$(dirname "$PROGNAME")" &>/dev/null && pwd)"
 ROOT=$(cd $HERE/.. && pwd)
-CLASSICO=$ROOT/classico
+
+# classsico will place read_profile_d logic in .bash_profile
+# it will be used during installation and then removed as dekva will handle it
+touch $HOME/.bash_profile
+cp $HOME/.bash_profile $HOME/.bash_profile.keep
+export CLASSICO=$ROOT/classico
 . $CLASSICO/shibumi/defs
 
+$SUDO true
+
 $CLASSICO/sbin/setup
+AUTO=0 $CLASSICO/bin/getstarship
+
+mv $HOME/.bash_profile.keep $HOME/.bash_profile
+
+for f in ~/.bashrc ~/.bash_profile; do
+	if ! grep devka $f >& /dev/null; then
+		printf '\n%s' '. ~/.devka/bin/devka' >> $f
+	fi
+done
+cp $HOME/.bash_profile $HOME/.bash_profile.new
+
+home=$HOME
+for f in /etc/bash.bashrc /etc/profile; do
+	if ! grep devka $f >& /dev/null; then
+		printf '\n%s' ". $HOME/.devka/bin/devka" >> $f
+	fi
+done
+

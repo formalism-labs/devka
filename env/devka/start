@@ -1,2 +1,2 @@
 
-export PATH=$DEVKA_PATH:$PATH
+prepend_to_path $DEVKA_PATH

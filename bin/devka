@@ -1,12 +1,13 @@
 
 export DEVKA="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export CLASSICO=$DEVKA/classico
 
-export ENVENIDO_DEBUG=1
+# export ENVENIDO_DEBUG=1
 
 export ENVENIDO_ENV="$DEVKA/env"
 
-if [[ $USER == root ]]; then
-	echo "### devka: user is '$SUDO_USER'"
+if [[ $USER == root && -n $SUDO_USER ]]; then
+	# echo "### devka: user is '$SUDO_USER'"
 	export DEVKA_HOME="/home/$SUDO_USER"
 else
 	export DEVKA_HOME="$HOME"
@@ -14,5 +15,4 @@ fi
 
 export ENVENIDO_USER_DEFS="$DEVKA_HOME/.devka-user/etc"
 
-echo "### devka: called by ${BASH_SOURCE[1]}"
-. $DEVKA/envenido/envenido
+. $CLASSICO/envenido/envenido
