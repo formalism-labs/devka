@@ -31,4 +31,3 @@ for f in /etc/bash.bashrc /etc/profile; do
 		printf '\n%s' ". $HOME/.devka/bin/devka" >> $f
 	fi
 done
-
