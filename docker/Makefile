@@ -1,3 +1,19 @@
+define HELPTEXT
+Help!
+  make build              Build the Docker image
+    CACHE=0                 Disable build cache
+    DEBUG=1                 Debug mode (not parallel, plain output)
+    LOCAL=1                 Use local .devka and .devka-user directories instead of cloning
+    DEVKA_USER_REPO=repo    Use custom devka-user repo (default: formalism-labs/devka-user)
+
+  make run     Run the Docker container
+    DAEMON=1     Run the container in daemon mode
+
+  make stop    Stop the container
+  make sh      Open a shell in the running container
+  make help    Show this message
+endef
+
 IMAGE=devka
 CONTAINER=devka
 
@@ -41,3 +57,6 @@ sh:
 	@docker exec -it $(CONTAINER) bash -l
 
 .PHONY: build run stop sh
+
+CLASSICO=../classico
+include $(CLASSICO)/mk/main
