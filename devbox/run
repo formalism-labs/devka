@@ -1,0 +1,104 @@
+#!/bin/bash
+
+PROGNAME="${BASH_SOURCE[0]}"
+HERE="$(cd "$(dirname "$PROGNAME")" &>/dev/null && pwd)"
+ROOT="$(cd $HERE/.. && pwd)"
+CLASSICO="$ROOT/classico"
+. $CLASSICO/shibumi/defs
+
+DEVKA="$ROOT"
+DEVKA_USER="$HOME/.devka-user"
+
+[[ $NOP == 1 ]] && OP=echo
+
+BOX_IMAGE_VER=1
+[[ -z $BOX_IMAGE ]] && BOX_IMAGE=devka/devbox:${BOX_IMAGE_VER}
+HOST_USER="$(id -un)"
+BOX_NAME=${HOST_USER}-box${BOX_IMAGE_VER}
+
+var_run=$HOME/.local/var/run
+
+#----------------------------------------------------------------------------------------------
+
+HOST_UID="$(id -u)"
+HOST_GID="$(id -g)"
+GIT_USER_NAME="$(git config --global user.name)"
+GIT_EMAIL="$(git config --global user.email)"
+
+RAM=8g
+
+#----------------------------------------------------------------------------------------------
+
+catch() {
+	docker stop $BOX_NAME > /dev/null
+	rm -f $var_run/$BOX_NAME.cid
+	exit 1
+}
+
+#----------------------------------------------------------------------------------------------
+
+if ! docker ps -f name=$BOX_NAME | grep $BOX_NAME > /dev/null; then
+	if [[ -z $_Dbg_DEBUGGER_LEVEL ]]; then
+		trap catch ERR
+	fi
+	echo "Starting box $BOX_NAME ..."
+	mkdir -p $var_run
+	$OP rm -f $var_run/$BOX_NAME.cid
+	#	--network host 
+	$OP docker run -d -it --rm \
+		--name $BOX_NAME \
+		--cidfile $var_run/$BOX_NAME.cid \
+		-m $RAM \
+		\
+		--cap-add NET_ADMIN \
+		--cap-add SYS_ADMIN \
+		--cap-add SYS_PTRACE \
+		--security-opt seccomp=unconfined \
+		--security-opt apparmor=unconfined \
+		\
+		--device /dev/net/tun \
+		--device /dev/fuse \
+		\
+		-v /home/${HOST_USER}:/h \
+		-v /v:/v \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		\
+		$BOX_IMAGE \
+		bash -l > /dev/null
+
+	$OP docker exec $BOX_NAME mkdir -p /root/.user-setup
+	$OP docker cp $DEVKA/ $BOX_NAME:/root/.user-setup/.devka >& /dev/null
+	$OP docker cp $DEVKA_USER/ $BOX_NAME:/root/.user-setup/ >& /dev/null
+
+	if [[ $NOP != 1 ]]; then
+		BOX_USER="$(docker exec $BOX_NAME id -n -u $HOST_UID)"
+	else
+		BOX_USER="$HOST_USER"
+	fi
+
+	$OP docker exec \
+		-e BOX_USER=${BOX_USER} \
+		-e HOST_UID=${HOST_UID} \
+		-e HOST_GID=${HOST_GID} \
+		-w /root/.user-setup \
+		$BOX_NAME bash -c ./.devka/devbox/setup-user
+
+	$OP docker exec \
+		-e GIT_USER_NAME="${GIT_USER_NAME}" \
+		-e GIT_EMAIL="${GIT_EMAIL}" \
+		-u $BOX_USER \
+		-w /home/$BOX_USER \
+		$BOX_NAME bash -l -c ./.devka/devbox/setup-as-user
+
+	echo "Done."
+	trap - ERR
+else
+	BOX_USER="$(docker exec $BOX_NAME id -n -u $HOST_UID)"
+fi
+
+$OP docker exec -it \
+	-e DEVBOX="$BOX_NAME" -e DEVBOX_NAME="$BOX_NAME" -e DOCKER_NAME="$BOX_NAME" \
+	-e _DEVBOX_UPDATE=1 \
+	-u $BOX_USER \
+	-w /home/$BOX_USER \
+	$BOX_NAME bash -l

@@ -1,0 +1,36 @@
+#!/bin/bash
+
+PROGNAME="${BASH_SOURCE[0]}"
+HERE="$(cd "$(dirname "$PROGNAME")" &>/dev/null && pwd)"
+CLASSICO="$(cd $HERE/../classico && pwd)"
+. $CLASSICO/shibumi/defs
+
+export DEBIAN_FRONTEND=noninteractive
+
+# export VERBOSE=1
+
+# OP=""
+# [[ $NOP == 1 ]] && OP=echo
+
+#----------------------------------------------------------------------------------------------
+
+# export NO_UPDATE=1
+
+xinstall gnupg apt-transport-https sudo tzdata
+
+$CLASSICO/bin/getbashdb
+$CLASSICO/bin/getpudb
+$CLASSICO/bin/getgcc
+$CLASSICO/bin/getgit --modern
+$CLASSICO/bin/getclang --format
+$CLASSICO/bin/getrust
+$CLASSICO/bin/getcmake --usr
+$CLASSICO/bin/getgdb --modern
+# $CLASSICO/bin/getdocker
+
+xinstall iputils-ping bridge-utils nmap iproute2 iptables
+xinstall psmisc htop btop
+xinstall vim mc tmux ack jq 
+xinstall tig git-delta
+
+#----------------------------------------------------------------------------------------------

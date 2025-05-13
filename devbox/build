@@ -1,0 +1,21 @@
+#!/bin/bash
+
+PROGNAME="${BASH_SOURCE[0]}"
+HERE="$(cd "$(dirname "$PROGNAME")" &>/dev/null && pwd)"
+ROOT="$(cd $HERE/.. && pwd)"
+
+BOX_IMAGE_VER=1
+[[ -z $BOX_IMAGE ]] && BOX_IMAGE=devka/devbox:${BOX_IMAGE_VER}
+
+if [[ $CACHE == 0 ]]; then
+	DOCKER_BUILD_ARGS+=--no-cache
+fi
+
+if [[ $DEBUG == 1 ]]; then
+	export BUILDKIT_MAX_PARALLELISM=1
+	DOCKER_BUILD_ARGS+=--progress=plain
+fi
+
+docker buildx build -t $BOX_IMAGE $DOCKER_BUILD_ARGS \
+	--build-context devka=$ROOT \
+	.

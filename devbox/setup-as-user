@@ -1,0 +1,24 @@
+#!/bin/bash
+
+PROGNAME="${BASH_SOURCE[0]}"
+HERE="$(cd "$(dirname "$PROGNAME")" &>/dev/null && pwd)"
+
+#----------------------------------------------------------------------------------------------
+
+$HOME/.devka/sbin/setup
+
+#----------------------------------------------------------------------------------------------
+
+{ cd $HOME; ln -s /h/.ssh .ssh; }
+
+#----------------------------------------------------------------------------------------------
+
+if [[ -z $GIT_USER_NAME || -z $GIT_EMAIL ]]; then
+	>2 echo "GIT_USER_NAME or GIT_EMAIL are not defined"
+	exit 1
+fi
+
+git config --global user.name "$GIT_USER_NAME"
+git config --global user.email "$GIT_EMAIL"
+
+#----------------------------------------------------------------------------------------------
