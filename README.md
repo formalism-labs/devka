@@ -1,3 +1,5 @@
+[![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/formalism-labs/devka)
+
 <p align="center">
   <img src="docs/devka.png" alt="Logo" />
 </p>
