@@ -1,4 +1,8 @@
 
+# required for gnome-based systems
+# to avoid premature configuration by gnome-shell
+[[ $- != *i* ]] && return
+
 export DEVKA="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export CLASSICO=$DEVKA/classico
 
