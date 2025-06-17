@@ -20,13 +20,13 @@ mv $HOME/.bash_profile.keep $HOME/.bash_profile
 
 for f in ~/.bashrc ~/.bash_profile; do
 	if ! grep devka $f >& /dev/null; then
-		printf '\n%s\n' '. ~/.devka/bin/devka' >> $f
+		printf '\n%s\n' '. $HOME/.devka/bin/devka.sh' >> $f
 	fi
 done
 cp $HOME/.bash_profile $HOME/.bash_profile.new
 
 for f in /etc/bash.bashrc /etc/profile; do
 	if ! grep devka $f >& /dev/null; then
-		printf '\n%s\n' ". $HOME/.devka/bin/devka" | $SUDO tee -a $f > /dev/null
+		printf '\n%s\n' ". $HOME/.devka/bin/devka.sh" | $SUDO tee -a $f > /dev/null
 	fi
 done
