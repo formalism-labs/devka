@@ -8,7 +8,8 @@ export CLASSICO=$DEVKA/classico
 
 # export ENVENIDO_DEBUG=1
 
-export ENVENIDO_ENV="$DEVKA/env"
+export ENVENIDO_ENVS="$DEVKA/envs"
+export ENVENIDO_TITLE=Devka
 
 if [[ $USER == root && -n $SUDO_USER ]]; then
 	# echo "### devka: user is '$SUDO_USER'"
