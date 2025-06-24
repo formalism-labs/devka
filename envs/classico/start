@@ -1,2 +1,3 @@
 
-[[ -n $CLASSICO_PATH ]] && export PATH=$CLASSICO_PATH:$PATH
+prepend_to_path $CLASSICO_PATH
+
