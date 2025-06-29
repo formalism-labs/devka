@@ -9,22 +9,38 @@ fi
 
 [[ -z $GITHUB_USER && -n $DEVKA_GITHUB_USER ]] && GITHUB_USER="$DEVKA_GITHUB_USER"
 
+runn() {
+	(( NOP == 1 || V >= 1 )) && { >&2 echo "$@"; }
+	[[ $NOP == 1 ]] && { return; }
+	if (( V < 2 )); then
+		local log="$(mktemp devito-setup.XXXXXX)"
+		{ eval "$@" > "$log" 2>&1 ; E=$?; } || true
+		[[ $E != 0 && $LOG != 0 ]] && cat "$log"
+		rm -f "$log"
+		return $E
+	else
+		eval "$@"
+	fi
+}
+
+$SUDO true
+
 cd $HOME
 if [[ ! -d .devka ]]; then
-	git clone --recurse-submodule https://github.com/formalism-labs/devka.git .devka
+	runn git clone --recurse-submodule https://github.com/formalism-labs/devka.git .devka
 else
-	git -C .devka pull --recurse-submodule
+	runn git -C .devka pull --recurse-submodule
 fi
 if [[ ! -d .devka-user ]]; then
-	git clone https://github.com/formalism-labs/devka-user.git .devka-user
+	runn git clone https://github.com/formalism-labs/devka-user.git .devka-user
 	if [[ -n GITHUB_USER ]]; then
 		cd .devka-user
-		git remote add $GITHUB_USER git@github.com:${GITHUB_USER}/devka-user.git
-		git fetch ${GITHUB_USER}
-		git branch --set-upstream-to=${GITHUB_USER}/main main
+		runn git remote add $GITHUB_USER git@github.com:${GITHUB_USER}/devka-user.git
+		runn git fetch ${GITHUB_USER}
+		runn git branch --set-upstream-to=${GITHUB_USER}/main main
 		cd -
 	fi
 fi
-git -C .devka-user pull
+runn git -C .devka-user pull
 
 ./.devka/sbin/setup
