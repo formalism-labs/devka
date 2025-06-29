@@ -4,7 +4,9 @@
 [[ $- != *i* ]] && return
 
 export DEVKA="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-[[ -z $CLASSICO ]] && export CLASSICO=$DEVKA/classico
+if [[ -z $CLASSICO ]]; then
+	export CLASSICO=$DEVKA/classico
+fi
 
 # export ENVENIDO_DEBUG=1
 
