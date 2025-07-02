@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [[ $FORCE != 1 ]]; then
+	if [[ -f ~/.devka/bin/devka.sh ]]; then
+		sed -i '1i\return' ~/.devka/bin/devka.sh
+	fi
+	exit
+fi
+
+rm -rf ~/.devka ~/.devka-user ~/.bun ~/.fnm ~/.jasmine ~/.local/bin ~/.local/opt ~/.npm ~/.profile.d ~/.venv
+sed -i '/devka/d' ~/.bash_profile
+sed -i '/devka/d' ~/.bashrc
+sudo sed -i '/devka/d' /etc/profile
+sudo sed -i '/devka/d' /etc/bash.bashrc
