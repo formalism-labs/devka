@@ -11,7 +11,7 @@ if [[ -f ~/.devka/bin/devka.sh ]]; then
 fi
 
 cat <<-'END' > /tmp/remove-devka
-	#!/bin/bash
+	#!/usr/bin/env bash
 
 	rm -rf ~/.devka ~/.devka-user ~/.bun ~/.fnm ~/.jasmine ~/.local/bin ~/.local/opt ~/.npm ~/.profile.d ~/.venv
 	sed -i '/devka/d' ~/.bash_profile
