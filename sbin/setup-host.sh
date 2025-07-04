@@ -1,6 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # curl -fsSL https://raw.githubusercontent.com/formalism-labs/devka/refs/heads/main/sbin/setup-host.sh | GITHUB_USER=raffapen bash
+
+if [[ $BASH_VERSINFO == 3 ]]; then
+	perror "Bash version is too old - please install Bash 5 and retry."
+	exit 1
+fi
 
 if ! command -v $1 &> /dev/null; then
 	>&2 echo "Please install git and retry."
