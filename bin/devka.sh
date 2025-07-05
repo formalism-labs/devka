@@ -3,7 +3,16 @@
 # to avoid premature configuration by gnome-shell
 [[ $- != *i* ]] && return
 
+if [[ -n $ZSH_VERSION || -n $FISH_VERSION ]]; then
+	return
+fi
+
 export DEVKA="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if [[ -n $CLASSICO && ! -d $CLASSICO ]]; then
+	echo "devito: warning: CLASSICO is pointing to an invalid directory: $CLASSICO"
+	unset CLASSICO
+fi
 if [[ -z $CLASSICO ]]; then
 	export CLASSICO=$DEVKA/classico
 fi
