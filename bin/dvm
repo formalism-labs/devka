@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+
+import argparse
+import os
+import sys
+import subprocess
+from subprocess import Popen
+import paella
+
+DEVKA = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
+CLASSICO = os.path.realpath(os.path.join(os.path.dirname(__file__), "../classico"))
+
+argv = sys.argv[1::]
+rest = []
+try:
+    separator_index = argv.index('--')
+    parse_argv = argv[:separator_index]
+    rest = argv[separator_index + 1:]
+except ValueError:
+    parse_argv = argv
+
+parser = argparse.ArgumentParser(usage="%(prog)s [options] [name] [osnick] -- [docker-options]", description='Create Docker container with benefits')
+
+parser.add_argument('-n', '--name', help='Container name')
+parser.add_argument('-o', '--osnick', help='Use image of given osnick (i.e dvm:OSNICK)')
+parser.add_argument('-d', '--daemon', action="store_true", default=False, help='Run container as daemon')
+parser.add_argument('-c', '--classico', help='classico path (without devka)')
+parser.add_argument('--devka', help='devka path')
+parser.add_argument('-u', '--devka-user', help='devka-user path')
+parser.add_argument('--clone', action="store_true", default=False, help='Copy automation infra into container')
+parser.add_argument('-b', '--bare', action="store_true", default=False, help='Run without automation infra')
+parser.add_argument('name1', metavar=('name'), nargs='?', help='Container name')
+parser.add_argument('osnick1', metavar=('osnick'), nargs='?', help='Image osnick')
+parser.add_argument('-r', '--rebuild', action="store_true", default=False, help='Rebuild image')
+parser.add_argument('--nop', action="store_true", default=False, help='Print commands, do not execute')
+# parser.add_argument('rest', nargs=argparse.REMAINDER, help='Arguments to pass to `docker run` command')
+args = parser.parse_args(parse_argv)
+
+if args.name is None and args.name1 is not None:
+    args.name = args.name1
+if args.name is None:
+    paella.fatal("missing container name")
+
+if args.osnick is None and args.osnick1 is not None:
+    args.osnick = args.osnick1
+if args.osnick is None:
+    osnick = paella.Platform().osnick
+    args.osnick = str(osnick)
+
+print("name: " + args.name)
+print("osnick: " + args.osnick)
+if args.classico:
+    print("classico: " + args.classico)
+print("rest: " + str(rest))
+
+image = f"dvm:{args.osnick}"
+try:
+    if not args.rebuild:
+        paella.sh(f"docker image inspect {image}")
+except Exception as x:
+    args.rebuild = True
+
+if args.rebuild:
+    dim = osnick.docker_image()
+    sh(f"{CLASSICO}/bin/dockerama -t {image} -d OS={dim}", nop=True)
+
+cmd = ["docker", "run", "-it", "--rm", "--name", args.name, "-v", "/v:/v", "--privileged"]
+if args.daemon:
+    cmd += ["-d"]
+cmd += [image, "/bin/bash", "-l"]
+if args.nop:
+    print(cmd.join(" "))
+else:
+    subprocess.call(cmd)
+    if args.daemon:
+        subprocess.call(["docker", "exec", "-it", args.name, "/bin/bash", "-l"])
