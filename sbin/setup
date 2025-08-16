@@ -34,4 +34,9 @@ install_devka() {
 $SUDO true
 
 echo "Installing Devka ..."
-spin_while install_devka
+if (( V > 0 )); then
+	install_devka
+else
+	spin_while install_devka
+fi
+
