@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+
+import os
+import sys
+from typing import List, Optional
+from pathlib import Path
+import subprocess
+from subprocess import Popen
+import rich
+# import typer
+# import paella
+
+DEVKA = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
+CLASSICO = os.path.realpath(os.path.join(os.path.dirname(__file__), "../classico"))
+
+sys.path.insert(0, CLASSICO)
+import paella
+
+from paella import Option, Argument
+
+#----------------------------------------------------------------------------------------------
+
+@cli_app
+class App:
+    def prolog(self):
+        return "Development environment manager"
+
+app = App()
+
+@app.command(help="Pull latest version from git repo")
+def update(verbose: II[bool, Option('--verbose', '-v', help="Be verbose")] = False):
+    pass
+
+@app.command(help="Configuration of user repository")
+def user(
+        set: II[str, Option(..., metavar="USER", show_default=False, help="Set user repo to github.com/[user]/devito-user")] = None,
+        verbose: II[bool, Option('--verbose', '-v', help="Be verbose")] = False):
+    pass
+
+if __name__ == "__main__":
+    app()
