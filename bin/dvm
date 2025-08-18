@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 
-import argparse
 import os
 import sys
 from typing import List, Optional
 from pathlib import Path
 import subprocess
 from subprocess import Popen
-import typer
 # import paella
 
 DEVKA = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
@@ -25,22 +23,12 @@ class App:
     def prolog(self):
         return "**Create Docker container with benefits**"
 
-#    def epilog(self):
-#        return "That's all, folks!"
-
-    def extra_args_desc(self):
-        return "docker args"
-
-    def run(self):
-        pass
-
 app = App()
 
-@app.command(main=True)
+@app.command(main=True, extra_args_desc='docker args')
 def dvm(
         name: II[Optional[str], Argument(help="Container name", show_default=False)] = None,
         osnick: II[Optional[str], Argument(help='Use image of given osnick (i.e., dvm:OSNICK), default: same as host', show_default=False)] = None,
-        #docker_args: List[str] = Argument(None, metavar="[-- docker arguments]", help="Docker arguments", show_default=False),
         
         name1: II[str, Option('-n', '--name', help='Container name', show_default=False, group="Docker")] = None,
         osnick1: II[str, Option('-o', '--osnick', help='Use image of given osnick (i.e., dvm:OSNICK)', show_default=False, group="Docker")] = None,
@@ -48,6 +36,7 @@ def dvm(
         rebuild: II[bool, Option('-r', '--rebuild', help='Rebuild image', group="Docker")] = False,
         local: II[bool, Option('-l', '--local', help='Local context', group="Docker")] = False,
 
+        home: II[bool, Option('-h', '--home', help='Fetch arfiracts from $HOME', group="Devka")] = False,
         classico: II[str, Option('-c', '--classico', help='classico path', show_default=False, group="Devka")] = None,
         devka: II[str, Option('--devka', help='devka path', show_default=False, group="Devka")] = None,
         devka_user: II[str, Option('-u', '--devka-user', help='devka-user path', show_default=False, group="Devka")] = None,
@@ -56,16 +45,6 @@ def dvm(
         nop: II[bool, Option("--nop", help="No operation")] = False,
         ):
 
-    if name is not None and name1 is not None and name != name1:
-        eprint(f"incompatible names: {name} and {name1}")
-        exit(1)
-    if name is None and name1 is not None:
-        name = name1
-    if name is None:
-        paella.fatal("missing container name")
-
-    print("name: " + name)
-    
     if osnick is None and osnick1 is not None:
         osnick = osnick1
     if osnick is None:
@@ -74,9 +53,22 @@ def dvm(
         os_nick = paella.OSNick(osnick)
 
     print("osnick: " + str(os_nick))
-#   if args.classico:
-#       print("classico: " + classico)
 
+    if rebuild:
+        dim = os_nick.docker_image()
+        subprocess.call(["make", "-C", f"{DEVKA}/dvm", f"IMAGE_NAME={image}", f"OS={dim}", "FAST=1"])
+        exit(0)
+    else:
+        if name is not None and name1 is not None and name != name1:
+            eprint(f"incompatible names: {name} and {name1}")
+            exit(1)
+        if name is None and name1 is not None:
+            name = name1
+        if name is None:
+            paella.fatal("missing container name")
+
+        print("name: " + name)
+    
     image = f"dvm:{os_nick}"
     try:
         if not rebuild:
@@ -84,17 +76,9 @@ def dvm(
     except:
         eprint(f"image {image} does not exist. use option -r to build it.")
         exit(1)
-        rebuild = True
 
     docker_args = app.extra_args
     print(f"docker args: {docker_args}");
-
-    if rebuild:
-        dim = os_nick.docker_image()
-        # sh(f"{CLASSICO}/bin/dockerama -s Dockerfile.2 -t {image} -d OS={dim}", nop=True)
-        # sh(f"make -C {DEVKA}/dvm IMAGE_NAME={image} OS={dim} FAST=1")
-        subprocess.call(["make", "-C", f"{DEVKA}/dvm", f"IMAGE_NAME={image}", f"OS={dim}", "FAST=1"])
-        exit(0)
 
     if devka_user:
         user_dir = devka_user
