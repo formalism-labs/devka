@@ -29,7 +29,17 @@ app = App()
 
 @app.command(help="Pull latest version from git repo")
 def update(verbose: II[bool, Option('--verbose', '-v', help="Be verbose")] = False):
-    pass
+    with paella.cwd(DEVKA):
+        if sh("git rev-parse --abbrev-ref HEAD") != "main":
+            eprint("Devka on branch $branch - not updated")
+            exit(0)
+        try:
+            sh("git diff --queit", fail=True)
+        except paella.ShError as x:
+            if x.retval != 0:
+                eprint("Devka is modified: either commit or revert changes")
+                exit(1)
+        sh("git pull --quiet --recurse-submodules")
 
 @app.command(help="Configuration of user repository")
 def user(
