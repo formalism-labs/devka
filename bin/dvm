@@ -42,7 +42,7 @@ def dvm(
         devka_user: II[str, Option('-u', '--devka-user', help='devka-user path', show_default=False, group="Devka")] = None,
         
         verbose: II[bool, Option("--verbose", "-v", help="Turn on extra logging")] = False,
-        nop: II[bool, Option("--nop", help="No operation")] = False,
+        nop: II[bool, Option("--nop", "-N", help="No operation")] = False,
         ):
 
     if osnick is None and osnick1 is not None:
@@ -52,7 +52,8 @@ def dvm(
     else:
         os_nick = paella.OSNick(osnick)
 
-    print("osnick: " + str(os_nick))
+    if verbose:
+        print("# osnick: " + str(os_nick))
 
     if rebuild:
         dim = os_nick.docker_image()
@@ -67,7 +68,8 @@ def dvm(
         if name is None:
             paella.fatal("missing container name")
 
-        print("name: " + name)
+        if verbose:
+            print("# name: " + name)
     
     image = f"dvm:{os_nick}"
     try:
@@ -77,8 +79,10 @@ def dvm(
         eprint(f"image {image} does not exist. use option -r to build it.")
         exit(1)
 
-    docker_args = app.extra_args
-    print(f"docker args: {docker_args}");
+    docker_args = []
+    run_args = app.extra_args
+    if verbose:
+        print(f"# docker args: {run_args}");
 
     if devka_user:
         user_dir = devka_user
@@ -90,9 +94,10 @@ def dvm(
         docker_args += ['--context', 'local']
 
     if daemon:
-        docker_args += ["-d"]
+        run_args += ["-d"]
 
-    run_cmd = ["docker", "run", "-it", "--privileged", "--rm",
+    run_cmd = ["docker"] + docker_args
+    run_cmd += ["run", "-it", "--privileged", "--rm",
         "--name", name, "-e", f"DOCKER_NAME={name}",
         "-v", "/v:/v",
         "-v", f"{user_dir}:/root/.devka-user"]
@@ -100,7 +105,7 @@ def dvm(
         run_cmd += ["-v", f"{devka}:/root/.devka"]
     if classico:
         run_cmd += ["-v", f"{classico}:/root/.devka/classico"]
-    run_cmd += docker_args
+    run_cmd += run_args
     run_cmd += [image, "/bin/bash", "-l"]
 
     if nop:
