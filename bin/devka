@@ -36,12 +36,16 @@ def update(
                 eprint("Devka on branch $branch - not updated")
             exit(1)
         try:
+            old_latest = sh("git rev-parse HEAD")
             sh("git diff --quiet")
         except paella.ShError as x:
             eprint("Devka is modified: either commit or revert changes")
             exit(1)
         sh("git pull --quiet --recurse-submodules")
-        if not quiet:
+        new_latest = sh("git rev-parse HEAD")
+        if new_latest == old_latest and verbose:
+            print("No changes")
+        if new_latest != old_latest and not quiet:
             print("Devka updated")
 
 @app.command(help="Configuration of user repository")
