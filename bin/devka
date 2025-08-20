@@ -7,7 +7,6 @@ from pathlib import Path
 import subprocess
 from subprocess import Popen
 import rich
-# import typer
 # import paella
 
 DEVKA = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
@@ -28,18 +27,22 @@ class App:
 app = App()
 
 @app.command(help="Pull latest version from git repo")
-def update(verbose: II[bool, Option('--verbose', '-v', help="Be verbose")] = False):
+def update(
+        quiet: II[bool, Option('--quiet', '-q', help="Be quiet")] = False,
+        verbose: II[bool, Option('--verbose', '-v', help="Be verbose")] = False):
     with paella.cwd(DEVKA):
         if sh("git rev-parse --abbrev-ref HEAD") != "main":
-            eprint("Devka on branch $branch - not updated")
-            exit(0)
+            if not quiet:
+                eprint("Devka on branch $branch - not updated")
+            exit(1)
         try:
-            sh("git diff --quiet", fail=True)
+            sh("git diff --quiet")
         except paella.ShError as x:
-            if x.retval != 0:
-                eprint("Devka is modified: either commit or revert changes")
-                exit(1)
+            eprint("Devka is modified: either commit or revert changes")
+            exit(1)
         sh("git pull --quiet --recurse-submodules")
+        if not quiet:
+            print("Devka updated")
 
 @app.command(help="Configuration of user repository")
 def user(
