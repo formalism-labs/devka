@@ -1,0 +1,5 @@
+
+prepend_to_path $VS2022_PATH:$WINSDK10_PATH
+prepend_to_var INCLUDE $VS2022_INCLUDE
+prepend_to_var LIB $VS2022_LIB
+prepend_to_var LIBPATH $VS2022_LIBPATH

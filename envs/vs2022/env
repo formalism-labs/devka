@@ -1,0 +1,51 @@
+# VisualStudio 2022
+
+export VS2022_ROOT=c:/root/dev/vs2022
+export WINSDK10_ROOT=c:/root/dev/libs/winsdk/10
+
+MSVC_VER=14.44.35207
+WINSDK_VER=10.0.19041.0
+VS_ROOT=$VS2022_ROOT
+WINSDK_ROOT=$WINSDK10_ROOT
+
+_VS2022_INCLUDE=(
+	$VS_ROOT/VC/Tools/MSVC/14.44.35207/include
+	$VS_ROOT/VC/Auxiliary/VS/include
+	$WINSDK_ROOT/include/10.0.19041.0/ucrt
+	$WINSDK_ROOT/include/10.0.19041.0/um
+	$WINSDK_ROOT/include/10.0.19041.0/shared
+	$WINSDK_ROOT/include/10.0.19041.0/winrt
+	$WINSDK_ROOT/include/10.0.19041.0/cppwinrt)
+export VS2022_INCLUDE=$(join_dirs _VS2022_INCLUDE)
+
+_VS2022_LIB=(
+	$VS_ROOT/VC/Tools/MSVC/14.44.35207/lib/x64
+	$WINSDK_ROOT/lib/10.0.19041.0/ucrt/x64
+	$WINSDK_ROOT/lib/10.0.19041.0/um/x64)
+export VS2022_LIB=$(join_dirs _VS2022_LIB)
+
+_VS2022_LIBPATH=(
+	$VS_ROOT/VC/Tools/MSVC/14.44.35207/lib/x64
+	$VS_ROOT/VC/Tools/MSVC/14.44.35207/lib/x86/store/references
+	$WINSDK_ROOT/UnionMetadata/10.0.19041.0
+	$WINSDK_ROOT/References/10.0.19041.0
+	C:/Windows/Microsoft.NET/Framework64/v4.0.30319)
+export VS2022_LIBPATH=$(join_dirs _VS2022_LIBPATH)
+
+export _VS2022_PATH=(
+	$VS_ROOT/VC/Tools/MSVC/14.44.35207/bin/HostX64/x64
+	$VS_ROOT/MSBuild/Current/bin/Roslyn
+	$VS_ROOT/MSBuild/Current/Bin/amd64
+	$VS_ROOT/Common7/IDE/VC/VCPackages
+	$VS_ROOT/Common7/IDE/CommonExtensions/Microsoft/TestWindow
+	$VS_ROOT/Common7/IDE/Extensions/Microsoft/CodeCoverage.Console
+	$VS_ROOT/Common7/IDE/VC/Linux/bin/ConnectionManagerExe
+	$VS_ROOT/Common7/IDE
+	$VS_ROOT/Common7/Tools
+	$VS_ROOT/Team Tools/DiagnosticsHub/Collector)
+export VS2022_PATH=$(join_path _VS2022_PATH)
+
+export _WINSDK10_PATH=(
+	$WINSDK_ROOT/bin/10.0.19041.0/x64
+	$WINSDK_ROOT/bin/x64)
+export WINSDK10_PATH=$(join_path _WINSDK10_PATH)
