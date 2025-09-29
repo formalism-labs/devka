@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
-if [[ ! -d .devka-user ]]; then
+set -e
+
+if [[ ! -d ~/.devka-user ]]; then
 	git clone https://github.com/formalism-labs/devka-user.git .devka-user
-	if [[ -n GITHUB_USER ]]; then
-		cd .devka-user
-		git remote add $GITHUB_USER git@github.com:${GITHUB_USER}/devka-user.git
-		git fetch ${GITHUB_USER}
-		git branch --set-upstream-to=${GITHUB_USER}/main main
-	fi
+fi
+if [[ -n GITHUB_USER ]]; then
+	cd ~/.devka-user
+	git remote add $GITHUB_USER git@github.com:${GITHUB_USER}/devka-user.git
+	GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git fetch ${GITHUB_USER}
+	git branch --set-upstream-to=${GITHUB_USER}/main main
 fi
 git -C ~/.devka-user pull
