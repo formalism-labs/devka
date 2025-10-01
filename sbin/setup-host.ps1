@@ -6,6 +6,27 @@ param (
 	[string] $PubKey
 )
 
+function runn_url {
+    param(
+        [Parameter(Mandatory)]
+        [Uri] $Url
+    )
+
+	$log = "$env:TEMP\runn.log"
+    Remove-Item $log -Force -ErrorAction SilentlyContinue
+
+    try {
+        (irm $Url) | iex *> $log
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed executing script from $Url"
+        }
+    }
+    catch {
+        Get-Content $log
+        throw
+    }
+}
+
 function install-devka {
 	$_home = "c:\msys64\home\${env:USERNAME}"
 	$devka = "${_home}\.devka"
@@ -17,8 +38,8 @@ function install-devka {
 	push-location
 
 	try {
-		# setting up msys2
-		irm https://raw.githubusercontent.com/formalism-labs/devka/refs/heads/main/sbin/setup-msys2.ps1 | iex
+		# set up msys2
+		run_url https://raw.githubusercontent.com/formalism-labs/devka/refs/heads/main/sbin/setup-msys2.ps1
 		$bash = "c:\msys64\usr\bin\bash.exe"
 
 		# install git
@@ -28,11 +49,13 @@ function install-devka {
 		& $bash -l -c 'git clone --recurse-submodule https://github.com/formalism-labs/devka.git .devka'
 
 		# clone devka-user without user customization because this typically requires a private key
-		& $bash -l -c 'git clone https://github.com/formalism-labs/devka-user.git .devka'
+		& $bash -l -c 'git clone https://github.com/formalism-labs/devka-user.git .devka-user'
 
 		# set up devka (and classico)
 		& $bash -l -c '~/.devka/sbin/setup'
-		
+
+		& $bash -l -c "~/.devka/classico/win/msys2/setup-winterm"
+
 		# set up ssh
 		& $bash -l -c "PUBKEY='${PubKey}' ~/.devka/classico/win/msys2/setup-sshd"
 
