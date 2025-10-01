@@ -40,7 +40,7 @@ try {
 
 	push-location
 
-	$f = $env:temp/msys2-sfx.exe
+	$f = "$env:temp\msys2-sfx.exe"
 	irm -outfile $f https://github.com/msys2/msys2-installer/releases/download/nightly-x86_64/msys2-base-x86_64-latest.sfx.exe
 	cd c:\
 	& $f
