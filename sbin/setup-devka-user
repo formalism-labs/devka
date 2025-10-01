@@ -10,5 +10,5 @@ if [[ -n GITHUB_USER ]]; then
 	git remote add $GITHUB_USER git@github.com:${GITHUB_USER}/devka-user.git
 	GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git fetch ${GITHUB_USER}
 	git branch --set-upstream-to=${GITHUB_USER}/main main
+	git -C ~/.devka-user pull
 fi
-git -C ~/.devka-user pull
