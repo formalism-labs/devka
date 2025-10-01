@@ -39,7 +39,7 @@ function install-devka {
 
 	try {
 		# set up msys2
-		run_url https://raw.githubusercontent.com/formalism-labs/devka/refs/heads/main/sbin/setup-msys2.ps1
+		runn_url https://raw.githubusercontent.com/formalism-labs/devka/refs/heads/main/sbin/setup-msys2.ps1
 		$bash = "c:\msys64\usr\bin\bash.exe"
 
 		# install git
