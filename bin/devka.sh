@@ -1,11 +1,9 @@
 
 # required for gnome-based systems
 # to avoid premature configuration by gnome-shell
-[[ $- != *i* ]] && return
+if [[ $- != *i* ]]; then return; fi
 
-if [[ -n $ZSH_VERSION || -n $FISH_VERSION ]]; then
-	return
-fi
+if [[ -n $ZSH_VERSION || -n $FISH_VERSION ]]; then return; fi
 
 export DEVKA="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
