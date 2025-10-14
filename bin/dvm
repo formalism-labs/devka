@@ -55,22 +55,6 @@ def dvm(
     if verbose:
         print("# osnick: " + str(os_nick))
 
-    if rebuild:
-        dim = os_nick.docker_image()
-        subprocess.call(["make", "-C", f"{DEVKA}/dvm", f"IMAGE_NAME={image}", f"OS={dim}", "FAST=1"])
-        exit(0)
-    else:
-        if name is not None and name1 is not None and name != name1:
-            eprint(f"incompatible names: {name} and {name1}")
-            exit(1)
-        if name is None and name1 is not None:
-            name = name1
-        if name is None:
-            paella.fatal("missing container name")
-
-        if verbose:
-            print("# name: " + name)
-    
     image = f"dvm:{os_nick}"
     try:
         if not rebuild:
@@ -79,10 +63,35 @@ def dvm(
         eprint(f"image {image} does not exist. use option -r to build it.")
         exit(1)
 
+    if rebuild:
+        dim = os_nick.docker_image()
+        build_cmd = ["make", "-C", f"{DEVKA}/dvm", f"IMAGE_NAME={image}", f"OS={dim}", "FAST=1"]
+        if nop:
+            print(" ".join(build_cmd))
+        else:
+            subprocess.call(build_cmd)
+        exit(0)
+
+    if name is not None and name1 is not None and name != name1:
+        eprint(f"incompatible names: {name} and {name1}")
+        exit(1)
+    if name is None and name1 is not None:
+        name = name1
+    if name is None:
+        paella.fatal("missing container name")
+
+    if verbose:
+        print("# name: " + name)
+    
     docker_args = []
     run_args = app.extra_args
     if verbose:
         print(f"# docker args: {run_args}");
+
+    if home:
+        devka = f"{Path.home()}/.devka"
+        user_dir = f"{Path.home()}/.devka-user"
+        local = True
 
     if devka_user:
         user_dir = devka_user

@@ -1,4 +1,5 @@
-FROM ubuntu:plucky
+ARG DOS
+FROM ${DOS}
 
 SHELL ["/bin/bash", "-l", "-c"]
 
