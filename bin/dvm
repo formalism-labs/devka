@@ -35,6 +35,7 @@ def dvm(
         daemon: II[bool, Option('-d', '--daemon', help='Run container as daemon', group="Docker")] = False,
         rebuild: II[bool, Option('-r', '--rebuild', help='Rebuild image', group="Docker")] = False,
         local: II[bool, Option('-l', '--local', help='Local context', group="Docker")] = False,
+        raw: II[bool, Option('--raw', help='Use base image (for diagnostics)', group="Docker")] = False,
 
         home: II[bool, Option('-h', '--home', help='Fetch arfiracts from $HOME', group="Devka")] = False,
         classico: II[str, Option('-c', '--classico', help='classico path', show_default=False, group="Devka")] = None,
@@ -51,21 +52,19 @@ def dvm(
         os_nick = paella.Platform().osnick
     else:
         os_nick = paella.OSNick(osnick)
+    dim = os_nick.docker_image()
 
     if verbose:
         print("# osnick: " + str(os_nick))
 
-    image = f"dvm:{os_nick}"
-    try:
-        if not rebuild:
-            paella.sh(f"docker image inspect {image}")
-    except:
-        eprint(f"image {image} does not exist. use option -r to build it.")
-        exit(1)
-
+    if raw:
+        image = dim
+    else:
+        image = f"dvm:{os_nick}"
     if rebuild:
-        dim = os_nick.docker_image()
         build_cmd = ["make", "-C", f"{DEVKA}/dvm", f"IMAGE_NAME={image}", f"OS={dim}", "FAST=1"]
+        if local:
+            build_cmd += [f"DOCKER_CTX=local"]
         if nop:
             print(" ".join(build_cmd))
         else:
@@ -90,17 +89,19 @@ def dvm(
 
     if home:
         devka = f"{Path.home()}/.devka"
-        user_dir = f"{Path.home()}/.devka-user"
-        local = True
-
-    if devka_user:
-        user_dir = devka_user
-    else:
-        user_dir = f"{Path.home()}/.devka-user"
+        if not devka_user:
+            devka_user = f"{Path.home()}/.devka-user"
         local = True
 
     if local:
         docker_args += ['--context', 'local']
+
+    if not raw:
+        try:
+            paella.sh(f"docker {' '.join(docker_args)} image inspect {image}")
+        except:
+            eprint(f"image {image} does not exist. use option -r to build it.")
+            exit(1)
 
     if daemon:
         run_args += ["-d"]
@@ -108,8 +109,9 @@ def dvm(
     run_cmd = ["docker"] + docker_args
     run_cmd += ["run", "-it", "--privileged", "--rm",
         "--name", name, "-e", f"DOCKER_NAME={name}",
-        "-v", "/v:/v",
-        "-v", f"{user_dir}:/root/.devka-user"]
+        "-v", "/v:/v"]
+    if devka_user and os.path.exists(devka_user):
+        run_cmd += ["-v", f"{devka_user}:/root/.devka-user"]
     if devka:
         run_cmd += ["-v", f"{devka}:/root/.devka"]
     if classico:
