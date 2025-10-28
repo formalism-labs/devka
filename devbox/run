@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 PROGNAME="${BASH_SOURCE[0]}"
 HERE="$(cd "$(dirname "$PROGNAME")" &>/dev/null && pwd)"
@@ -9,10 +9,11 @@ CLASSICO="$ROOT/classico"
 DEVKA="$ROOT"
 DEVKA_USER="$HOME/.devka-user"
 
-[[ $NOP == 1 ]] && OP=echo
+# [[ $NOP == 1 ]] && OP=echo
 
-BOX_IMAGE_VER=1
-[[ -z $BOX_IMAGE ]] && BOX_IMAGE=devka/devbox:${BOX_IMAGE_VER}
+OSNICK=noble
+BOX_IMAGE_VER=
+[[ -z $BOX_IMAGE ]] && BOX_IMAGE=devka/devbox${BOX_IMAGE_VER}:${OSNICK}
 HOST_USER="$(id -un)"
 BOX_NAME=${HOST_USER}-box${BOX_IMAGE_VER}
 
@@ -37,34 +38,45 @@ catch() {
 
 #----------------------------------------------------------------------------------------------
 
-if ! docker ps -f name=$BOX_NAME | grep $BOX_NAME > /dev/null; then
+if ! docker ps -f name=$BOX_NAME | grep -q $BOX_NAME; then
 	if [[ -z $_Dbg_DEBUGGER_LEVEL ]]; then
 		trap catch ERR
 	fi
-	echo "Starting box $BOX_NAME ..."
+	echo "# Starting box $BOX_NAME ..."
 	mkdir -p $var_run
 	$OP rm -f $var_run/$BOX_NAME.cid
 	#	--network host 
-	$OP docker run -d -it --rm \
+
+	opts=(
+		--cap-add NET_ADMIN
+		--cap-add SYS_ADMIN
+		--cap-add SYS_PTRACE
+		--security-opt seccomp=unconfined
+		--security-opt apparmor=unconfined)
+	sec_opts="${opts[*]}"
+
+	opts=(
+		--device /dev/net/tun
+		--device /dev/fuse)
+	dev_opts="${opts[*]}"
+
+	opts=(
+		-v /home/${HOST_USER}:/h
+		-v /v:/v
+		-v /var/run/docker.sock:/var/run/docker.sock)
+	vol_opts="${opts[*]}"
+	
+	runn docker run -d -it --rm \
 		--name $BOX_NAME \
 		--cidfile $var_run/$BOX_NAME.cid \
 		-m $RAM \
 		\
-		--cap-add NET_ADMIN \
-		--cap-add SYS_ADMIN \
-		--cap-add SYS_PTRACE \
-		--security-opt seccomp=unconfined \
-		--security-opt apparmor=unconfined \
-		\
-		--device /dev/net/tun \
-		--device /dev/fuse \
-		\
-		-v /home/${HOST_USER}:/h \
-		-v /v:/v \
-		-v /var/run/docker.sock:/var/run/docker.sock \
+		$sec_opts \
+		$dev_opts \
+		$vol_opts \
 		\
 		$BOX_IMAGE \
-		bash -l > /dev/null
+		bash -l
 
 	$OP docker exec $BOX_NAME mkdir -p /root/.user-setup
 	$OP docker cp $DEVKA/ $BOX_NAME:/root/.user-setup/.devka >& /dev/null
@@ -90,7 +102,7 @@ if ! docker ps -f name=$BOX_NAME | grep $BOX_NAME > /dev/null; then
 		-w /home/$BOX_USER \
 		$BOX_NAME bash -l -c ./.devka/devbox/setup-as-user
 
-	echo "Done."
+	echo "# Done."
 	trap - ERR
 else
 	BOX_USER="$(docker exec $BOX_NAME id -n -u $HOST_UID)"

@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+
+PROGNAME="${BASH_SOURCE[0]}"
+HERE="$(cd "$(dirname "$PROGNAME")" &>/dev/null && pwd)"
+CLASSICO="$(cd $HERE/.. && pwd)"
+. $CLASSICO/shibumi/defs
+
+OP=""
+[[ $NOP == 1 ]] && OP=echo
+
+cd $HOME
+$OP mkdir -p .ssh .local/bin .profile.d
+
+#----------------------------------------------------------------------------------------------
+
+# https://www.youtube.com/watch?v=BVVF5lzS1k0
+put_volume() {
+	local fname="$1"
+	if [[ ! -f $fname ]]; then
+		$OP dd of="$fname" > /dev/null 2>&1
+	else
+		eprint "$fname in place, creating $fname.new"
+		$OP dd of="$fname/new" > /dev/null 2>&1
+	fi
+	return 0
+}
+
+#----------------------------------------------------------------------------------------------
+
+if [[ -z $GIT_USER ]]; then
+	eprint "GIT_USER is undefined"
+	exit 1
+fi
+
+put_volume .bash_profile <<-'EOF'
+	pathappend() {
+	    if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
+	        PATH="${PATH:+"$PATH:"}$1"
+	    fi
+	}
+	
+	pathprepend() {
+	    if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
+	        PATH="$1${PATH:+":$PATH"}"
+	    fi
+	}
+	
+	# if running bash
+	if [ -n "$BASH_VERSION" ]; then
+	    # include .bashrc if it exists
+	    if [ -f "$HOME/.bashrc" ]; then
+	        . "$HOME/.bashrc"
+	    fi
+	fi
+	
+	pathprepend $HOME/bin
+	
+	if [ -d $HOME/.profile.d ]; then
+	    if [ -n "$(ls $HOME/.profile.d/*.sh 2> /dev/null)" ]; then
+		    for __sh in $HOME/.profile.d/*.sh; do
+	            if [ -r $__sh ]; then
+	                . $__sh
+	            fi
+	        done
+		    unset __sh
+	    fi
+	fi
+
+	if [[ -n $_DEVBOX_UPDATE ]]; then
+	    unset _DEVBOX_UPDATE
+	    devbox update
+	fi 	
+	EOF
+
+if ! grep devboxrc $HOME/.bashrc > /dev/null 2<&1; then
+	$OP tee -a $HOME/.bashrc > /dev/null <<-EOF
+		. $HOME/.local/classico/devbox/devboxrc
+		EOF
+fi
+
+#----------------------------------------------------------------------------------------------
+
+put_volume .profile.d/local.sh <<-'EOF'
+	pathprepend $HOME/.local/bin
+	pathprepend $HOME/.local/classico/bin
+	EOF
+
+#----------------------------------------------------------------------------------------------
+
+GIT_USER_NAME="$(git config --global user.name)"
+if [[ -z $GIT_USER_NAME ]]; then
+	eprint "Git config user.name undefined [use: git config --global user.name \"User Name\"]"
+fi
+
+GIT_EMAIL="$(git config --global user.email)"
+if [[ -z $GIT_EMAIL ]]; then
+	$OP git config --global user.email "$GIT_USER@neureality.ai"
+fi

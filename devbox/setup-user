@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 PROGNAME="${BASH_SOURCE[0]}"
 HERE="$(cd "$(dirname "$PROGNAME")" &>/dev/null && pwd)"
@@ -13,14 +13,21 @@ CLASSICO="$(cd $HERE/../classico && pwd)"
 USER="$BOX_USER"
 USER_HOME="/home/$USER"
 
-if [[ ! -d $USER_HOME ]]; then
-	groupadd -g $HOST_GID $USER
-	useradd -u $HOST_UID -g $HOST_GID -s /bin/bash -m $USER
+user="$(id -nu $HOST_UID)"
+if [[ $? != 0 ]]; then
+	userdel $user
+	if [[ $user != $USER ]]; then
+		mv /home/$user /home/$USER
+	fi
+	useradd -u $HOST_UID -U -m -d /home/$USER -s /bin/bash $USER
+	echo root:password ${USER}:password | chpasswd
+elif [[ ! -d $USER_HOME ]]; then
+	useradd -u $HOST_UID -U -m -s /bin/bash $USER
 	echo root:password ${USER}:password | chpasswd
 fi
 
 # sed -i "/root.*ALL/a $USER ALL=(ALL:ALL) NOPASSWD:ALL" /etc/sudoers
-echo "$USER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER
+echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/$USER
 
 cd $USER_HOME
 

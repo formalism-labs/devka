@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+PROGNAME="${BASH_SOURCE[0]}"
+HERE="$(cd "$(dirname "$PROGNAME")" &>/dev/null && pwd)"
+ROOT="$(cd $HERE/.. && pwd)"
+CLASSICO="$ROOT/classico"
+. $CLASSICO/shibumi/defs
+
+DEVBOX="$ROOT/devbox"
+
+#----------------------------------------------------------------------------------------------
+
+help() {
+	cat <<-END
+		devbox operations
+	
+		[ARGVARS...] devbox [--help] command
+		
+		Commands:
+		run             Invoke a devbox container
+
+		setup-devhost   Configure a devhost machine for running devbox via container
+		setup-vm        Configure a VM (typically a cloud machine) for running devbox
+
+		build-image     Build the devbox container image
+
+		help            Print this message
+
+		Argument variables:
+		NOP=1           No operation
+		VERBOSE=1       Verbose operation
+
+	END
+}
+
+#--------------------------------------------------------------------------------------
+
+cmd=$1
+shift
+
+case $cmd in
+	"" | help | --help)
+		help ;;
+	run)
+		$DEVBOX/run ;;
+	build-image)
+		$DEVBOX/build ;;
+	setup-devhost)
+		$DEVBOX/setup-devhost ;;
+	setup-vm)
+		$DEVBOX/setup-vm ;;
+	*)
+		eprint "$cmd: invalid command"
+		exit 1
+		;;
+esac
+exit 0
