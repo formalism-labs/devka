@@ -1,7 +1,7 @@
 
 # required for gnome-based systems
 # to avoid premature configuration by gnome-shell
-if [[ $- != *i* ]]; then return; fi
+if [[ $- != *i* && -z ENVENIDO ]]; then return; fi
 
 if [[ -n $ZSH_VERSION || -n $FISH_VERSION ]]; then return; fi
 
@@ -22,7 +22,7 @@ export ENVENIDO_TITLE=Devka
 
 if [[ $USER == root && -n $SUDO_USER ]]; then
 	# echo "### devka: user is '$SUDO_USER'"
-	export DEVKA_HOME="/home/$SUDO_USER"
+	export DEVKA_HOME="$(eval echo ~$SUDO_USER)"
 else
 	export DEVKA_HOME="$HOME"
 fi
