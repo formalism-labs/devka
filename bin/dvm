@@ -61,8 +61,14 @@ def dvm(
         image = dim
     else:
         image = f"dvm:{os_nick}"
+
+    try:
+        sh(f"docker image inspect {image}")
+    except:
+        rebuild = True
+
     if rebuild:
-        build_cmd = ["make", "-C", f"{DEVKA}/dvm", f"IMAGE_NAME={image}", f"OS={dim}", "FAST=1"]
+        build_cmd = ["make", "-C", f"{DEVKA}/dvm", f"IMAGE_NAME={image}", f"OS={dim}", "FAST=1", "--no-print-directory"]
         if devka_user:
             build_cmd += [f"DOCKER_USER={devka_user}"]
         if local:
