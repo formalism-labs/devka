@@ -4,18 +4,20 @@ FROM ${DOS}
 SHELL ["/bin/bash", "-l", "-c"]
 
 WORKDIR /root
-RUN ls -A1 > .dirs
 
-USER ${USER_NAME}
-WORKDIR /home/${USER_NAME}
+COPY --from=devka ./devbox/setup-user /tmp/setup-user
+RUN chmod +x /tmp/setup-user; /tmp/setup-user; rm /tmp/setup-user
 
-COPY --from=devka . /root/.devka
-COPY --from=devka_user . /root/.devka-user
+USER user
+WORKDIR /home/.user
 
-WORKDIR /root/.devka
+COPY --chown=user:user --from=devka      . /home/.user/.devka
+COPY --chown=user:user --from=devka_user . /home/.user/.devka-user
+
+WORKDIR /home/.user/.devka
 RUN V=1 ./sbin/setup
 RUN V=1 ./devbox/setup
 
-WORKDIR /root
+WORKDIR /home/.user
 
 CMD ["/bin/bash", "-l"]

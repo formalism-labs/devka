@@ -16,6 +16,8 @@ export DEBIAN_FRONTEND=noninteractive
 
 # export NO_UPDATE=1
 
+export PAELLA_SETUP_SKIP_PREAMBLE=1
+
 xinstall gnupg apt-transport-https sudo tzdata
 
 $CLASSICO/bin/getbashdb
@@ -30,7 +32,7 @@ $CLASSICO/bin/getgdb --modern
 
 xinstall iputils-ping bridge-utils nmap iproute2 iptables
 xinstall psmisc htop btop
-xinstall vim mc tmux ack jq 
+xinstall vim mc tmux ripgrep jq 
 xinstall tig git-delta
 
 #----------------------------------------------------------------------------------------------

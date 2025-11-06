@@ -1,37 +1,142 @@
 #!/usr/bin/env bash
 
-PROGNAME="${BASH_SOURCE[0]}"
-HERE="$(cd "$(dirname "$PROGNAME")" &>/dev/null && pwd)"
-CLASSICO="$(cd $HERE/../classico && pwd)"
-. $CLASSICO/shibumi/defs
+echo "# start setup-user ..."
 
-[[ $($CLASSICO/bin/iscontainer) != 1 ]] && fatal "should run within devbox container"
-[[ $(id -un) != root ]] && fatal "should run as root"
-[[ -z $BOX_USER ]] && fatal "BOX_USER is not defined"
-[[ -z $HOST_UID || -z $HOST_GID ]] && fatal "HOST_UID or HOST_GID are not defined"
+#----------------------------------------------------------------------------------------------
 
-USER="$BOX_USER"
-USER_HOME="/home/$USER"
+is_command() {
+	command -v $1 &> /dev/null
+}
 
-user="$(id -nu $HOST_UID)"
-if [[ $? != 0 ]]; then
-	userdel $user
-	if [[ $user != $USER ]]; then
-		mv /home/$user /home/$USER
+xinstall() {
+	local packs="$@"
+
+	if is_command apt-get; then
+		export DEBIAN_FRONTEND=noninteractive
+		$SUDO apt-get update -qq
+		$SUDO apt-get install --fix-missing -y $packs
+	elif is_command dnf; then
+		$SUDO dnf install -y $packs
+	elif is_command tdnf; then # mariner linux
+		$SUDO tdnf install -y $packs
+		$SUDO yum install -y $packs
+	elif is_command zypper; then
+		$SUDO zypper install -y $packs
+	elif is_command apk; then
+		$SUDO apk update
+		$SUDO apk add $packs
+	elif is_command pacman; then
+		$SUDO pacman --noprogressbar -Sy
+		$SUDO pacman --noconfirm --noprogressbar -S $packs
+	elif is_command brew; then
+		for p in $packs; do
+			brew list $p &>/dev/null || brew install $p
+		done
+	elif is_command pkg; then
+		$SUDO pkg install -y $packs
 	fi
-	useradd -u $HOST_UID -U -m -d /home/$USER -s /bin/bash $USER
-	echo root:password ${USER}:password | chpasswd
-elif [[ ! -d $USER_HOME ]]; then
-	useradd -u $HOST_UID -U -m -s /bin/bash $USER
-	echo root:password ${USER}:password | chpasswd
+}
+
+fatal() {
+	>&2 echo "$@"
+	exit 1
+}
+
+[[ $NOP == 1 ]] && OP=echo
+
+#----------------------------------------------------------------------------------------------
+
+build_phase() {
+	local USER_ID=1000
+	local USER="user"
+	local HOME_DIR="/home/.user"
+
+	local old_user="$(id -nu $USER_ID 2> /dev/null)"
+	if [[ $? == 0 ]]; then
+		$OP userdel $old_user
+		$OP rm -f /etc/sudoers.d/$old_user
+	fi
+	if id $USER >& /dev/null; then
+		$OP userdel $USER
+	fi
+	if [[ -d /home/$old_user ]]; then
+		$OP mv /home/$old_user $HOME_DIR
+	fi
+
+	$OP useradd -u $USER_ID -U -m -d $HOME_DIR -s /bin/bash $USER
+	if [[ $NOP != 1 ]]; then
+		echo root:password ${USER}:password | chpasswd
+	else
+		echo "echo root:password ${USER}:password | chpasswd"
+	fi
+
+	mkdir -p /etc/sudoers.d
+	if [[ $NOP != 1 ]]; then
+		echo "$USER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER
+	else
+		echo "\"$USER ALL=(ALL) NOPASSWD: ALL\" > /etc/sudoers.d/$USER"
+	fi
+	$OP chown -R $USER_ID $HOME_DIR
+
+	if ! is_command sudo; then
+		SUDO= xinstall sudo
+	fi
+}
+
+#----------------------------------------------------------------------------------------------
+
+[[ $(id -un) != root ]] && fatal "should run as root"
+
+if [[ ! -d /home/.user ]]; then
+	echo "# build phase ..."
+	build_phase
+	exit 0
 fi
 
-# sed -i "/root.*ALL/a $USER ALL=(ALL:ALL) NOPASSWD:ALL" /etc/sudoers
-echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/$USER
+#----------------------------------------------------------------------------------------------
 
-cd $USER_HOME
+[[ -z $HOST_USER ]] && fatal "HOST_USER is not defined"
+[[ -z $HOST_UID || -z $HOST_GID ]] && fatal "HOST_UID or HOST_GID are not defined"
+if [[ -n $HOST_GID ]]; then
+	[[ -z $HOST_GROUP ]] && fatal "HOST_GROUP is not defined"
+fi
 
-mv $HOME/.user-setup/.devka .
-mv $HOME/.user-setup/.devka-user .
+USER="$HOST_USER"
 
-chown -R $USER:$USER .devka .devka-user
+cat <<-END >> /etc/fstab
+	/home/.user /home/user none bind 0 0
+	END
+mount -a
+
+old_user="$(id -nu $HOST_UID 2> /dev/null)"
+if [[ $? == 0 ]]; then
+	$OP userdel $old_user
+	$OP rm -f /etc/sudoers.d/$old_user
+fi
+
+if [[ -n $HOST_GID ]]; then
+	if ! getent group $HOST_GID &> /dev/null; then
+		$OP groupadd -g $HOST_GID $HOST_GROUP
+	fi
+	gopt="-g $HOST_GID"
+else
+	gopt="-U"
+fi
+
+$OP useradd -u $HOST_UID $gopt -m -d /home/$USER -s /bin/bash $USER
+if [[ $NOP != 1 ]]; then
+	echo root:password ${USER}:password | chpasswd
+else
+	echo "echo root:password ${USER}:password | chpasswd"
+fi
+
+if [[ $NOP != 1 ]]; then
+	echo "$USER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER
+else
+	echo "echo \"$USER ALL=(ALL) NOPASSWD: ALL\" > /etc/sudoers.d/$USER"
+fi
+
+if [[ $HOST_UID != 1000 && $HOST_GID != 1000 ]]; then
+	echo "# chown -R $HOST_UID:$HOST_GID /home/$USER"
+	$OP chown -R $HOST_UID:$HOST_GID /home/.user
+fi

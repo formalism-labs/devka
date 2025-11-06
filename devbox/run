@@ -11,11 +11,17 @@ DEVKA_USER="$HOME/.devka-user"
 
 # [[ $NOP == 1 ]] && OP=echo
 
-OSNICK=noble
-BOX_IMAGE_VER=
-[[ -z $BOX_IMAGE ]] && BOX_IMAGE=devka/devbox${BOX_IMAGE_VER}:${OSNICK}
+
+OSNICK="${OSNICK:-noble}"
+BOX_IMAGE_VER="${BOX_VER:-1}"
+[[ -z $BOX_IMAGE ]] && BOX_IMAGE="devka/devbox:${OSNICK}.${BOX_IMAGE_VER}"
+
 HOST_USER="$(id -un)"
-BOX_NAME=${HOST_USER}-box${BOX_IMAGE_VER}
+
+BOX_ID="${BOX_ID:-1}"
+BOX_NAME="${HOST_USER}-devbox${BOX_ID}"
+BOX_DNAME="$BOX_NAME"
+# BOX_DNAME="${HOST_USER}/devbox${BOX_ID}:${OSNICK}.${BOX_IMAGE_VER}"
 
 var_run=$HOME/.local/var/run
 
@@ -23,6 +29,7 @@ var_run=$HOME/.local/var/run
 
 HOST_UID="$(id -u)"
 HOST_GID="$(id -g)"
+HOST_GROUP="$(id -gn)"
 GIT_USER_NAME="$(git config --global user.name)"
 GIT_EMAIL="$(git config --global user.email)"
 
@@ -31,18 +38,18 @@ RAM=8g
 #----------------------------------------------------------------------------------------------
 
 catch() {
-	docker stop $BOX_NAME > /dev/null
+	docker stop $DBOX_NAME > /dev/null
 	rm -f $var_run/$BOX_NAME.cid
 	exit 1
 }
 
 #----------------------------------------------------------------------------------------------
 
-if ! docker ps -f name=$BOX_NAME | grep -q $BOX_NAME; then
+if ! docker ps -f name=$BOX_NAME | grep -q "$BOX_NAME"; then
 	if [[ -z $_Dbg_DEBUGGER_LEVEL ]]; then
 		trap catch ERR
 	fi
-	echo "# Starting box $BOX_NAME ..."
+	echo "# Starting box $DBOX_NAME ..."
 	mkdir -p $var_run
 	$OP rm -f $var_run/$BOX_NAME.cid
 	#	--network host 
@@ -66,10 +73,12 @@ if ! docker ps -f name=$BOX_NAME | grep -q $BOX_NAME; then
 		-v /var/run/docker.sock:/var/run/docker.sock)
 	vol_opts="${opts[*]}"
 	
+	echo "# docker run ..."
 	runn docker run -d -it --rm \
 		--name $BOX_NAME \
 		--cidfile $var_run/$BOX_NAME.cid \
 		-m $RAM \
+		-u root \
 		\
 		$sec_opts \
 		$dev_opts \
@@ -78,39 +87,30 @@ if ! docker ps -f name=$BOX_NAME | grep -q $BOX_NAME; then
 		$BOX_IMAGE \
 		bash -l
 
-	$OP docker exec $BOX_NAME mkdir -p /root/.user-setup
-	$OP docker cp $DEVKA/ $BOX_NAME:/root/.user-setup/.devka >& /dev/null
-	$OP docker cp $DEVKA_USER/ $BOX_NAME:/root/.user-setup/ >& /dev/null
-
-	if [[ $NOP != 1 ]]; then
-		BOX_USER="$(docker exec $BOX_NAME id -n -u $HOST_UID)"
-	else
-		BOX_USER="$HOST_USER"
-	fi
-
-	$OP docker exec \
-		-e BOX_USER=${BOX_USER} \
+	echo "# setup-user ..."
+	echo $OP docker exec -it \
+		-e HOST_USER=${HOST_USER} \
+		-e HOST_GROUP=${HOST_GROUP} \
 		-e HOST_UID=${HOST_UID} \
 		-e HOST_GID=${HOST_GID} \
-		-w /root/.user-setup \
-		$BOX_NAME bash -c ./.devka/devbox/setup-user
+		-u root \
+		$BOX_DNAME bash -l -c "cp /home/.user/.devka/devbox/setup-user /tmp; /tmp/setup-user"
 
-	$OP docker exec \
+	echo "# setup-as-user ..."
+	echo $OP docker exec -it \
 		-e GIT_USER_NAME="${GIT_USER_NAME}" \
 		-e GIT_EMAIL="${GIT_EMAIL}" \
-		-u $BOX_USER \
-		-w /home/$BOX_USER \
+		-u $HOST_USER \
 		$BOX_NAME bash -l -c ./.devka/devbox/setup-as-user
 
 	echo "# Done."
-	trap - ERR
-else
-	BOX_USER="$(docker exec $BOX_NAME id -n -u $HOST_UID)"
+	if [[ -z $_Dbg_DEBUGGER_LEVEL ]]; then
+		trap - ERR
+	fi
 fi
 
-$OP docker exec -it \
+echo $OP docker exec -it \
 	-e DEVBOX="$BOX_NAME" -e DEVBOX_NAME="$BOX_NAME" -e DOCKER_NAME="$BOX_NAME" \
 	-e _DEVBOX_UPDATE=1 \
-	-u $BOX_USER \
-	-w /home/$BOX_USER \
+	-u $HOST_USER \
 	$BOX_NAME bash -l
