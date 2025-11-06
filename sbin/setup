@@ -32,9 +32,10 @@ install_devka() {
 
 	local devka_sudoers="$(mktemp /tmp/devka-XXXXXX)"
 	cat <<-END > $devka_sudoers
-		Defaults env_keep += "ENVENIDO FNM_ENV_FILE"
+		Defaults env_keep += "ENVENIDO DOCKER_NAME FNM_ENV_FILE"
 		END
 	$SUDO chown root:root $devka_sudoers
+	$SUDO mkdir -p /etc/sudoers.d
 	$SUDO cp $devka_sudoers /etc/sudoers.d/devka
 }
 
@@ -46,4 +47,3 @@ if (( V > 0 )); then
 else
 	spin_while install_devka
 fi
-

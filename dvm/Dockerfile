@@ -1,4 +1,4 @@
-ARG DOS
+ARG DOS=ubunbu:latest
 FROM ${DOS}
 
 SHELL ["/bin/bash", "-l", "-c"]

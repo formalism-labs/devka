@@ -1,7 +1,7 @@
 
 export CLASSICO=../classico
 export DEVKA=..
-export DEVKA_USER=../devka-user
+export DEVKA_USER=$(DEVKA)/../devka-user
 
 DOCKER_BUILD_ARGS += \
 	--build-arg DOS=$(OS) \
