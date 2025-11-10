@@ -16,7 +16,7 @@ COPY --chown=user:user --from=devka_user . /home/.user/.devka-user
 
 WORKDIR /home/.user/.devka
 RUN V=1 ./sbin/setup
-RUN V=1 ./devbox/setup
+RUN V=1 ./devbox/system-setup
 
 WORKDIR /home/.user
 
