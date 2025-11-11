@@ -1,7 +1,7 @@
 
 # required for gnome-based systems
 # to avoid premature configuration by gnome-shell
-if [[ $- != *i* && -z ENVENIDO ]]; then return; fi
+if [[ $- != *i* && -z $ENVENIDO ]]; then return; fi
 
 if [[ -n $ZSH_VERSION || -n $FISH_VERSION ]]; then return; fi
 
