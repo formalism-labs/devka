@@ -5,7 +5,7 @@ on:
     inputs:
       platforms:
         description: 'Platforms'
-        default: '["ubuntu:latest"]'
+        default: '["ubuntu-latest"]'
 
 jobs:
   linux-matrix:
