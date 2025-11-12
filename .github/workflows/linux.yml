@@ -29,6 +29,8 @@ jobs:
         V=1 ./sbin/setup-gha-host.sh
     - name: dvm operations
       run: |
+        rearm
+        ppath
         dvm plucky1 plucky
         dvm fed1 fedora
         dvm arch1 arch
