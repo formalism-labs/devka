@@ -23,7 +23,7 @@ runn() {
 
 $SUDO true
 
-ln -s $PWD $HOME/.devito
+ln -s $PWD $HOME/.devka
 cd $HOME
 
 runn git clone https://github.com/formalism-labs/devka-user.git .devka-user
