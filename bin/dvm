@@ -70,7 +70,7 @@ def dvm(
     if rebuild:
         build_cmd = ["make", "-C", f"{DEVKA}/dvm", f"IMAGE_NAME={image}", f"OS={dim}", "FAST=1", "--no-print-directory"]
         if devka_user:
-            build_cmd += [f"DOCKER_USER={devka_user}"]
+            build_cmd += [f"DEVKA_USER={devka_user}"]
         if local:
             build_cmd += ["DOCKER_CTX=local"]
         if nop:
