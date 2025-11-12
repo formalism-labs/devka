@@ -9,7 +9,7 @@ if [[ $BASH_VERSINFO == 3 ]]; then
 	exit 1
 fi
 
-if ! command -v $1 &> /dev/null; then
+if ! command -v git &> /dev/null; then
 	>&2 echo "Please install git and retry."
 	exit 1
 fi
