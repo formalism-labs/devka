@@ -29,43 +29,43 @@ app = App()
 def run(
         verbose: II[bool, Option("--verbose", "-v", help="Turn on extra logging")] = False,
         nop: II[bool, Option("--nop", "-N", help="No operation")] = False,
-	):
-	subprocess.call([f"{DEVKA}/devbox/run"])
+    ):
+    subprocess.call([f"{DEVKA}/devbox/run"])
 
 @app.command(help='Build the devbox container image')
 def build(
         osnick: II[Optional[str], Argument(help='Use image of given osnick', show_default=False)] = None,
         verbose: II[bool, Option("--verbose", "-v", help="Turn on extra logging")] = False,
         nop: II[bool, Option("--nop", "-N", help="No operation")] = False,
-	):
+    ):
     cmd = ["make", "-C", f"{DEVKA}/devbox", "--no-print-dir"]
     if osnick is not None:
         cmd += [f"OSNICK={osnick}"]
-	subprocess.call()
-	
+    subprocess.call()
+
 @app.command(help='Setup devbox host')
 def setup(
         devhost: II[bool, Option('--devhost', help='Configure a devhost machine for running devbox via container')] = False,
         vm: II[bool, Option('--vm', help='Configure a VM (typically a cloud machine) for running devbox')] = False,
         verbose: II[bool, Option("--verbose", "-v", help="Turn on extra logging")] = False,
         nop: II[bool, Option("--nop", "-N", help="No operation")] = False,
-	):
-	pass
+    ):
+    pass
 
 @app.command(help='Commit devbox state')
 def commit(
         verbose: II[bool, Option("--verbose", "-v", help="Turn on extra logging")] = False,
         nop: II[bool, Option("--nop", "-N", help="No operation")] = False,
-	):
-	pass
+    ):
+    pass
 
 @app.command(help='Stop devbox')
 def stop(
         commit: II[bool, Option("--commit", "-c", help="Commit before stopping")] = False,
         verbose: II[bool, Option("--verbose", "-v", help="Turn on extra logging")] = False,
         nop: II[bool, Option("--nop", "-N", help="No operation")] = False,
-	):
-	pass
+    ):
+    pass
 
 #----------------------------------------------------------------------------------------------
 
