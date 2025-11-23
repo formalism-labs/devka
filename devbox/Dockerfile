@@ -1,12 +1,15 @@
-ARG DOS
+ARG DOS=none
 FROM ${DOS}
+
+ARG DEVKA_BUILD=1
+ENV DEVKA_BUILD=${DEVKA_BUILD}
 
 SHELL ["/bin/bash", "-l", "-c"]
 
 WORKDIR /root
 
 COPY --from=devka ./devbox/setup-user /tmp/setup-user
-RUN chmod +x /tmp/setup-user; /tmp/setup-user; rm /tmp/setup-user
+RUN chmod +x /tmp/setup-user && /tmp/setup-user && rm /tmp/setup-user
 
 USER user
 WORKDIR /home/.user

@@ -23,7 +23,8 @@ class SystemSetup(paella.Setup):
             self.install("moreutils")
 
         self.run(f"{CLASSICO}/bin/getgcc")
-        self.run(f"{CLASSICO}/bin/getgit --modern")
+        if self.osnick != "arch":
+            self.run(f"{CLASSICO}/bin/getgit --modern")
 
     def linux_first(self):
         self.install("bridge-utils nmap iptables")
@@ -35,6 +36,7 @@ class SystemSetup(paella.Setup):
         self.install("iputils-ping iproute2")
 
     def archlinux(self):
+        self.run(f"{CLASSICO}/bin/getgit")
         self.install("iputils iproute2")
 
     def redhat_compat(self):

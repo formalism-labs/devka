@@ -46,21 +46,27 @@ fatal() {
 
 #----------------------------------------------------------------------------------------------
 
+# this will create user `user` with id 1000 and homedir /home/.user
+# if a user named `user` exists (its id may not be 1000), it is removed
+# also, if user with id 1000 exists, it is removed
+# the home directory of user 1000 exists, it is renamed to /home/.user
+
 build_phase() {
 	local USER_ID=1000
-	local USER="user"
-	local HOME_DIR="/home/.user"
+	local USER=user
+	local HOME_DIR=/home/.user
 
 	local old_user="$(id -nu $USER_ID 2> /dev/null)"
-	if [[ $? == 0 ]]; then
+	if [[ -n $old_user ]]; then
 		$OP userdel $old_user
 		$OP rm -f /etc/sudoers.d/$old_user
+		if [[ -d /home/$old_user ]]; then
+			$OP mv /home/$old_user $HOME_DIR
+		fi
 	fi
 	if id $USER >& /dev/null; then
 		$OP userdel $USER
-	fi
-	if [[ -d /home/$old_user ]]; then
-		$OP mv /home/$old_user $HOME_DIR
+		$OP rm -f /etc/sudoers.d/$USER
 	fi
 
 	$OP useradd -u $USER_ID -U -m -d $HOME_DIR -s /bin/bash $USER
@@ -79,7 +85,7 @@ build_phase() {
 	$OP chown -R $USER_ID $HOME_DIR
 
 	if ! is_command sudo; then
-		SUDO= xinstall sudo
+		SUDO="" $OP xinstall sudo
 	fi
 }
 
@@ -95,6 +101,8 @@ fi
 
 #----------------------------------------------------------------------------------------------
 
+echo "# start phase ..."
+
 [[ -z $HOST_USER ]] && fatal "HOST_USER is not defined"
 [[ -z $HOST_UID || -z $HOST_GID ]] && fatal "HOST_UID or HOST_GID are not defined"
 if [[ -n $HOST_GID ]]; then
@@ -104,8 +112,10 @@ fi
 USER="$HOST_USER"
 
 cat <<-END >> /etc/fstab
-	/home/.user /home/user none bind 0 0
+	/home/.user /home/$USER none bind 0 0
 	END
+mkdir -p /home/$USER
+chown $HOST_UID:$HOST_GID /home/$USER
 mount -a
 
 old_user="$(id -nu $HOST_UID 2> /dev/null)"
@@ -140,3 +150,5 @@ if [[ $HOST_UID != 1000 && $HOST_GID != 1000 ]]; then
 	echo "# chown -R $HOST_UID:$HOST_GID /home/$USER"
 	$OP chown -R $HOST_UID:$HOST_GID /home/.user
 fi
+
+chmod r+g /home/.user

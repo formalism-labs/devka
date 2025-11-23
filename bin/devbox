@@ -6,6 +6,7 @@ from typing import List, Optional
 from pathlib import Path
 import subprocess
 from subprocess import Popen
+
 # import paella
 
 DEVKA = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
@@ -25,32 +26,62 @@ class App:
 
 app = App()
 
-@app.command(help='Invoke a devbox container')
-def run(
+#----------------------------------------------------------------------------------------------
+
+@app.command(help='Start a devbox container')
+def start(
+        name: II[Optional[str], Argument(help='Name of devbox container')] = None,
+        osnick: II[Optional[str], Argument(help='Use image of given osnick', show_default=False)] = None,
+
         verbose: II[bool, Option("--verbose", "-v", help="Turn on extra logging")] = False,
         nop: II[bool, Option("--nop", "-N", help="No operation")] = False,
     ):
-    subprocess.call([f"{DEVKA}/devbox/run"])
+    if osnick is None:
+        osnick = ""
+    nop_ = "1" if nop else "0"
+    cmd = ['/bin/bash', '-l', '-c', f"NOP={nop_} OSNICK={osnick} BOX_ID=2 {DEVKA}/devbox/run"]
+    if nop:
+        print(" ".join(cmd))
+    else:
+        subprocess.call(cmd)
 
-@app.command(help='Build the devbox container image')
-def build(
+@app.command(help='Stop devbox')
+def stop(
+        name: II[Optional[str], Argument(help='Name of devbox container')] = None,
+
+        commit: II[bool, Option("--commit", "-c", help="Commit before stopping")] = False,
+        verbose: II[bool, Option("--verbose", "-v", help="Turn on extra logging")] = False,
+        nop: II[bool, Option("--nop", "-N", help="No operation")] = False,
+    ):
+    box_id = 1
+    user = sh("id -un")
+    box_name = f"{user}-devbox{box_id}"
+    cid_path = f"{Path.home()}/.local/var/run/{box_name}.cid"
+    if os.path.exists(cid_path):
+        cid = paella.fread(cid_path)
+        try:
+            sh(f"docker ps -q -f id='{cid}' | grep .")
+            sh(f"docker stop {cid}")
+        except:
+            pass
+        finally:
+            os.remove(cid_path)
+
+@app.command(help='Invoke a devbox')
+def sh(
+        name: II[Optional[str], Argument(help='Name of devbox container')] = None,
+
         osnick: II[Optional[str], Argument(help='Use image of given osnick', show_default=False)] = None,
         verbose: II[bool, Option("--verbose", "-v", help="Turn on extra logging")] = False,
         nop: II[bool, Option("--nop", "-N", help="No operation")] = False,
     ):
-    cmd = ["make", "-C", f"{DEVKA}/devbox", "--no-print-dir"]
-    if osnick is not None:
-        cmd += [f"OSNICK={osnick}"]
-    subprocess.call()
-
-@app.command(help='Setup devbox host')
-def setup(
-        devhost: II[bool, Option('--devhost', help='Configure a devhost machine for running devbox via container')] = False,
-        vm: II[bool, Option('--vm', help='Configure a VM (typically a cloud machine) for running devbox')] = False,
-        verbose: II[bool, Option("--verbose", "-v", help="Turn on extra logging")] = False,
-        nop: II[bool, Option("--nop", "-N", help="No operation")] = False,
-    ):
-    pass
+    if osnick is None:
+        osnick = ""
+    cmd = ['/bin/bash', '-l', '-c', f"OSNICK='{osnick}' {DEVKA}/devbox/run"]
+    if nop:
+        print(" ".join(cmd))
+    else:
+        subprocess.call(cmd)
 
 @app.command(help='Commit devbox state')
 def commit(
@@ -59,9 +90,33 @@ def commit(
     ):
     pass
 
-@app.command(help='Stop devbox')
-def stop(
-        commit: II[bool, Option("--commit", "-c", help="Commit before stopping")] = False,
+@app.command(help='List devbox images')
+def list_images(
+        local: II[bool, Option("--local", "-l", help="List local images")] = False,
+    ):
+    pass
+
+#----------------------------------------------------------------------------------------------
+
+@app.command(help='Build the devbox container image')
+def build(
+        osnick: II[Optional[str], Argument(help='Use image of given osnick', show_default=False)] = None,
+
+        verbose: II[bool, Option("--verbose", "-v", help="Turn on extra logging")] = False,
+        nop: II[bool, Option("--nop", "-N", help="No operation")] = False,
+    ):
+    cmd = ["make", "-C", f"{DEVKA}/devbox", "--no-print-dir"]
+    if osnick is not None:
+        cmd += [f"OSNICK={osnick}"]
+    if nop:
+        print(" ".join(cmd))
+    else:
+        subprocess.call(cmd)
+
+@app.command(help='Setup devbox host')
+def setup(
+        devhost: II[bool, Option('--devhost', help='Configure a devhost machine for running devbox via container')] = False,
+        vm: II[bool, Option('--vm', help='Configure a VM (typically a cloud machine) for running devbox')] = False,
         verbose: II[bool, Option("--verbose", "-v", help="Turn on extra logging")] = False,
         nop: II[bool, Option("--nop", "-N", help="No operation")] = False,
     ):

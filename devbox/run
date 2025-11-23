@@ -77,6 +77,7 @@ if ! docker ps -f name=$BOX_NAME | grep -q "$BOX_NAME"; then
 	runn docker run -d -it --rm \
 		--name $BOX_NAME \
 		--cidfile $var_run/$BOX_NAME.cid \
+		-e DEVKA_BUILD=1 \
 		-m $RAM \
 		-u root \
 		\
@@ -84,24 +85,26 @@ if ! docker ps -f name=$BOX_NAME | grep -q "$BOX_NAME"; then
 		$dev_opts \
 		$vol_opts \
 		\
-		$BOX_IMAGE \
-		bash -l
+		$BOX_IMAGE
 
 	echo "# setup-user ..."
-	echo $OP docker exec -it \
+	$OP docker cp $HERE/setup-user $BOX_DNAME:/tmp/setup-user
+	$OP docker exec -it \
+		-e DEVKA_BUILD=1 \
 		-e HOST_USER=${HOST_USER} \
 		-e HOST_GROUP=${HOST_GROUP} \
 		-e HOST_UID=${HOST_UID} \
 		-e HOST_GID=${HOST_GID} \
 		-u root \
-		$BOX_DNAME bash -l -c "cp /home/.user/.devka/devbox/setup-user /tmp; /tmp/setup-user"
+		$BOX_DNAME bash -c /tmp/setup-user
 
 	echo "# setup-as-user ..."
-	echo $OP docker exec -it \
+	$OP docker cp $HERE/setup-as-user $BOX_DNAME:/tmp/setup-as-user
+	$OP docker exec -it \
 		-e GIT_USER_NAME="${GIT_USER_NAME}" \
 		-e GIT_EMAIL="${GIT_EMAIL}" \
 		-u $HOST_USER \
-		$BOX_NAME bash -l -c ./.devka/devbox/setup-as-user
+		$BOX_NAME bash -l -c /tmp/setup-as-user
 
 	echo "# Done."
 	if [[ -z $_Dbg_DEBUGGER_LEVEL ]]; then
@@ -109,7 +112,7 @@ if ! docker ps -f name=$BOX_NAME | grep -q "$BOX_NAME"; then
 	fi
 fi
 
-echo $OP docker exec -it \
+$OP docker exec -it \
 	-e DEVBOX="$BOX_NAME" -e DEVBOX_NAME="$BOX_NAME" -e DOCKER_NAME="$BOX_NAME" \
 	-e _DEVBOX_UPDATE=1 \
 	-u $HOST_USER \
