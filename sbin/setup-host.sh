@@ -40,7 +40,7 @@ else
 fi
 if [[ ! -d .devka-user ]]; then
 	runn git clone https://github.com/formalism-labs/devka-user.git .devka-user
-	if [[ -n GITHUB_USER ]]; then
+	if [[ -n $GITHUB_USER ]]; then
 		dir="$PWD"
 		cd .devka-user
 		runn git remote add $GITHUB_USER git@github.com:${GITHUB_USER}/devka-user.git
