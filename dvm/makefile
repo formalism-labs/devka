@@ -5,7 +5,8 @@ export DEVKA_USER=$(DEVKA)/../devka-user
 
 DOCKER_BUILD_ARGS += \
 	--build-arg DOS=$(OS) \
-	--build-context devka=$(realpath $(DEVKA))
+	--build-context devka=$(realpath $(DEVKA)) \
+	--build-context devka_user=$(realpath $(DEVKA_USER)) \
 
 ifneq ($(wildcard $(DEVKA_USER)/*),)
 DOCKER_BUILD_ARGS += --build-context devka_user=$(realpath $(DEVKA_USER))
