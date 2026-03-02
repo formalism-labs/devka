@@ -50,9 +50,53 @@ def update(
 
 @app.command(help="Configuration of user repository")
 def user(
-        set: II[str, Option(..., metavar="USER", show_default=False, help="Set user repo to github.com/[user]/devito-user")] = None,
+        user: II[str, Option('--set', metavar="USER", show_default=False, help="Set user repo to github.com/[user]/devito-user")] = None,
         verbose: II[bool, Option('--verbose', '-v', help="Be verbose")] = False):
-    pass
+    user_dir = Path.home() / ".devka-user"
+
+    if user:
+        # Set the user repository
+        if not user_dir.exists():
+            eprint(f"Error: {user_dir} does not exist")
+            exit(1)
+
+        if not (user_dir / ".git").exists():
+            eprint(f"Error: {user_dir} is not a git repository")
+            exit(1)
+
+        # Update the git remote
+        repo_url = f"git@github.com:{user}/devito-user.git"
+        with paella.cwd(user_dir):
+            try:
+                sh(f"git remote set-url origin {repo_url}")
+                print(f"User repository set to: {repo_url}")
+
+                # Pull content from the new repository
+                if verbose:
+                    print("Pulling content from repository...")
+                sh("git pull")
+                if verbose:
+                    print("Repository content updated")
+            except paella.ShError as e:
+                eprint(f"Error: {e}")
+                exit(1)
+    else:
+        # Show current configuration
+        if not user_dir.exists():
+            print("User repository not configured (directory does not exist)")
+            exit(0)
+
+        if not (user_dir / ".git").exists():
+            print("User repository not configured (not a git repository)")
+            exit(0)
+
+        with paella.cwd(user_dir):
+            try:
+                remote_url = sh("git remote get-url origin")
+                print(f"Current user repository: {remote_url}")
+            except paella.ShError:
+                print("User repository not configured (no remote origin)")
+                exit(0)
 
 if __name__ == "__main__":
     app()
