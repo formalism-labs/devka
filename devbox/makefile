@@ -1,7 +1,7 @@
 
 export CLASSICO=../classico
 export DEVKA=..
-export DEVKA_USER=$(DEVKA)/../devka-user
+export DEVKA_USER=$(DEVKA)/../.devka-user
 
 # DOS ?= ubuntu:noble
 OSNICK ?= noble

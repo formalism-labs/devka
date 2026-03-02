@@ -151,4 +151,4 @@ if [[ $HOST_UID != 1000 && $HOST_GID != 1000 ]]; then
 	$OP chown -R $HOST_UID:$HOST_GID /home/.user
 fi
 
-chmod r+g /home/.user
+chmod g+rw /home/.user
