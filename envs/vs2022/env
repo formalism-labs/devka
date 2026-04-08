@@ -33,7 +33,7 @@ _VS2022_LIBPATH=(
 	C:/Windows/Microsoft.NET/Framework64/v4.0.30319)
 export VS2022_LIBPATH=$(join_dirs _VS2022_LIBPATH)
 
-export _VS2022_PATH=(
+_VS2022_PATH=(
 	$VS_ROOT/VC/Tools/MSVC/$MSVC_VER/bin/HostX64/x64
 	$VS_ROOT/MSBuild/Current/bin/Roslyn
 	$VS_ROOT/MSBuild/Current/Bin/amd64
@@ -46,7 +46,7 @@ export _VS2022_PATH=(
 	$VS_ROOT/Team\ Tools/DiagnosticsHub/Collector)
 export VS2022_PATH=$(join_path _VS2022_PATH)
 
-export _WINSDK10_PATH=(
+_WINSDK10_PATH=(
 	$WINSDK_ROOT/bin/$WINSDK_VER/x64
 	$WINSDK_ROOT/bin/x64)
 export WINSDK10_PATH=$(join_path _WINSDK10_PATH)
