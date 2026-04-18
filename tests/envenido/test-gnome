@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Test: envenido alias loading in a fresh GNOME-like environment.
+#
+# Simulates launching a terminal from GNOME (no devka env vars inherited).
+# Expects: aliases are fully loaded in a single interactive bash session.
+
+set -euo pipefail
+
+DEVKA="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+PASS=0
+FAIL=0
+
+check() {
+    local desc="$1"
+    local result="$2"
+    local expected="$3"
+    if [[ "$result" == "$expected" ]]; then
+        echo "  PASS: $desc"
+        (( PASS++ )) || true
+    else
+        echo "  FAIL: $desc"
+        echo "        expected: '$expected'"
+        echo "        got:      '$result'"
+        (( FAIL++ )) || true
+    fi
+}
+
+echo "=== test: gnome scenario (fresh env, single shell) ==="
+
+OUTPUT=$(env -i \
+    HOME="$HOME" \
+    USER="$USER" \
+    TERM=xterm-256color \
+    DISPLAY=:0 \
+    PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    bash -i -c '
+        . "$HOME/.devka/bin/devka.sh"
+        echo "ENVENIDO_CACHE=$ENVENIDO_CACHE"
+        echo "CACHE_EXISTS=$(test -e "$ENVENIDO_CACHE" && echo yes || echo no)"
+        echo "ALIAS_COUNT=$(alias | wc -l)"
+        echo "ALIAS_PY=$(alias py &>/dev/null && echo defined || echo missing)"
+        echo "ALIAS_GIS=$(alias gis &>/dev/null && echo defined || echo missing)"
+    ' 2>/dev/null)
+
+cache=$(echo "$OUTPUT" | grep '^ENVENIDO_CACHE=' | cut -d= -f2-)
+cache_exists=$(echo "$OUTPUT" | grep '^CACHE_EXISTS=' | cut -d= -f2)
+alias_count=$(echo "$OUTPUT" | grep '^ALIAS_COUNT=' | cut -d= -f2 | tr -d ' ')
+alias_py=$(echo "$OUTPUT" | grep '^ALIAS_PY=' | cut -d= -f2)
+alias_gis=$(echo "$OUTPUT" | grep '^ALIAS_GIS=' | cut -d= -f2)
+
+check "ENVENIDO_CACHE is set"     "$([ -n "$cache" ] && echo yes || echo no)" "yes"
+check "cache file exists"         "$cache_exists"   "yes"
+check "aliases are loaded"        "$([ "$alias_count" -gt 0 ] && echo yes || echo no)" "yes"
+check "alias 'py' is defined"    "$alias_py"        "defined"
+check "alias 'gis' is defined"   "$alias_gis"       "defined"
+
+echo
+echo "passed: $PASS  failed: $FAIL"
+[[ $FAIL -eq 0 ]]

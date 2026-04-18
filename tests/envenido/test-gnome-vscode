@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# Test: envenido alias loading when VSCode is launched from GNOME.
+#
+# Simulates the two-shell sequence VSCode performs:
+#   Phase 1 — env-detection shell: bash runs full devka init, then exits.
+#             The EXIT trap fires, cleanup deletes the cache file.
+#             VSCode captures exported vars/functions from this shell.
+#   Phase 2 — integrated terminal shell: bash starts with the captured env
+#             (__ENVENIDO_CORE__=1 and a now-deleted ENVENIDO_CACHE).
+#             core skips re-init; interactive must regenerate the cache.
+#
+# Expects: aliases are loaded in phase 2 despite the deleted cache.
+
+set -euo pipefail
+
+DEVKA="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+PASS=0
+FAIL=0
+
+check() {
+    local desc="$1"
+    local result="$2"
+    local expected="$3"
+    if [[ "$result" == "$expected" ]]; then
+        echo "  PASS: $desc"
+        (( PASS++ )) || true
+    else
+        echo "  FAIL: $desc"
+        echo "        expected: '$expected'"
+        echo "        got:      '$result'"
+        (( FAIL++ )) || true
+    fi
+}
+
+echo "=== test: gnome/vscode scenario (two-shell sequence) ==="
+
+# ── Phase 1: env-detection shell ─────────────────────────────────────────────
+echo "  [phase 1] env-detection shell ..."
+
+CAPTURED_ENV=$(env -i \
+    HOME="$HOME" \
+    USER="$USER" \
+    TERM=xterm-256color \
+    DISPLAY=:0 \
+    PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    bash -i -c '
+        . "$HOME/.devka/bin/devka.sh"
+        export -p
+        export -f
+    ' 2>/dev/null)
+
+# Verify phase 1 produced expected vars
+p1_core=$(echo "$CAPTURED_ENV" | grep -c '__ENVENIDO_CORE__' || true)
+check "phase 1: __ENVENIDO_CORE__ exported" "$([ "$p1_core" -gt 0 ] && echo yes || echo no)" "yes"
+
+p1_cache_path=$(echo "$CAPTURED_ENV" | grep 'ENVENIDO_CACHE=' | head -1 | sed "s/.*ENVENIDO_CACHE='\\?\\([^']*\\)'\\?.*/\1/")
+check "phase 1: ENVENIDO_CACHE exported"    "$([ -n "$p1_cache_path" ] && echo yes || echo no)" "yes"
+check "phase 1: cache file cleaned up"      "$(test -e "$p1_cache_path" && echo no || echo yes)" "yes"
+
+# ── Phase 2: integrated terminal shell ───────────────────────────────────────
+echo "  [phase 2] integrated terminal shell ..."
+
+OUTPUT=$(bash -i -c "
+    eval \"\$CAPTURED_ENV\" 2>/dev/null || true
+    . \"\$HOME/.devka/bin/devka.sh\"
+    echo \"ENVENIDO_CACHE=\$ENVENIDO_CACHE\"
+    echo \"CACHE_EXISTS=\$(test -e \"\$ENVENIDO_CACHE\" && echo yes || echo no)\"
+    echo \"ALIAS_COUNT=\$(alias | wc -l)\"
+    echo \"ALIAS_PY=\$(alias py &>/dev/null && echo defined || echo missing)\"
+    echo \"ALIAS_GIS=\$(alias gis &>/dev/null && echo defined || echo missing)\"
+" <<< "" 2>/dev/null)
+
+cache=$(echo "$OUTPUT" | grep '^ENVENIDO_CACHE=' | cut -d= -f2-)
+cache_exists=$(echo "$OUTPUT" | grep '^CACHE_EXISTS=' | cut -d= -f2)
+alias_count=$(echo "$OUTPUT" | grep '^ALIAS_COUNT=' | cut -d= -f2 | tr -d ' ')
+alias_py=$(echo "$OUTPUT" | grep '^ALIAS_PY=' | cut -d= -f2)
+alias_gis=$(echo "$OUTPUT" | grep '^ALIAS_GIS=' | cut -d= -f2)
+
+check "phase 2: ENVENIDO_CACHE is set"     "$([ -n "$cache" ] && echo yes || echo no)" "yes"
+check "phase 2: cache file exists"         "$cache_exists"   "yes"
+check "phase 2: aliases are loaded"        "$([ "$alias_count" -gt 0 ] && echo yes || echo no)" "yes"
+check "phase 2: alias 'py' is defined"    "$alias_py"        "defined"
+check "phase 2: alias 'gis' is defined"   "$alias_gis"       "defined"
+
+echo
+echo "passed: $PASS  failed: $FAIL"
+[[ $FAIL -eq 0 ]]
