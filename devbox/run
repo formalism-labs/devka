@@ -13,7 +13,7 @@ DEVKA_USER="$HOME/.devka-user"
 
 
 OSNICK="${OSNICK:-noble}"
-BOX_IMAGE_VER="${BOX_VER:-1}"
+BOX_IMAGE_VER="${BOX_VER:-1-1}"
 [[ -z $BOX_IMAGE ]] && BOX_IMAGE="devka/devbox:${OSNICK}.${BOX_IMAGE_VER}"
 
 HOST_USER="$(id -un)"
@@ -38,7 +38,7 @@ RAM=8g
 #----------------------------------------------------------------------------------------------
 
 catch() {
-	docker stop $DBOX_NAME > /dev/null
+	docker stop $BOX_DNAME > /dev/null
 	rm -f $var_run/$BOX_NAME.cid
 	exit 1
 }
@@ -49,7 +49,7 @@ if ! docker ps -f name=$BOX_NAME | grep -q "$BOX_NAME"; then
 	if [[ -z $_Dbg_DEBUGGER_LEVEL ]]; then
 		trap catch ERR
 	fi
-	echo "# Starting box $DBOX_NAME ..."
+	echo "# Starting box $BOX_DNAME ..."
 	mkdir -p $var_run
 	$OP rm -f $var_run/$BOX_NAME.cid
 	#	--network host 

@@ -35,15 +35,18 @@ def start(
 
         verbose: II[bool, Option("--verbose", "-v", help="Turn on extra logging")] = False,
         nop: II[bool, Option("--nop", "-N", help="No operation")] = False,
+        debug: II[bool, Option("--debug", help="Run with debugger")] = False,
     ):
     if osnick is None:
         osnick = ""
     nop_ = "1" if nop else "0"
-    cmd = ['/bin/bash', '-l', '-c', f"NOP={nop_} OSNICK={osnick} BOX_ID=2 {DEVKA}/devbox/run"]
-    if nop:
-        print(" ".join(cmd))
-    else:
-        subprocess.call(cmd)
+    bashdb = "bashdb" if debug else ""
+    cmd = ['/bin/bash', '-l', '-c', f"NOP={nop_} OSNICK={osnick} BOX_ID= {bashdb} {DEVKA}/devbox/run"]
+    subprocess.call(cmd)
+    # if nop:
+    #     print(" ".join(cmd))
+    # else:
+    #     subprocess.call(cmd)
 
 @app.command(help='Stop devbox')
 def stop(
