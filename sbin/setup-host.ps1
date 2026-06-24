@@ -1,4 +1,4 @@
-﻿
+
 # invoke using:
 # iex "& { $(irm https://raw.githubusercontent.com/formalism-labs/devka/refs/heads/main/sbin/setup-host.ps1) } -PubKey 'ssh-rsa ...'"
 
