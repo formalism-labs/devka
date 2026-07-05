@@ -41,7 +41,7 @@ install_devka() {
 	fi
 }
 
-$SUDO true
+[[ $(platform_os) != windows ]] && $SUDO true
 
 echo "Installing Devka ..."
 if (( V > 0 )); then
