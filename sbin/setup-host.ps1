@@ -235,4 +235,5 @@ function install-devka {
 	}
 }
 
+Set-ExecutionPolicy Bypass -Scope Process -Force
 install-devka
