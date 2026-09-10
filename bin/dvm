@@ -68,7 +68,7 @@ def dvm(
         rebuild = True
 
     if rebuild:
-        build_cmd = ["make", "-C", f"{DEVKA}/dvm", f"IMAGE_NAME={image}", f"OS={dim}", "FAST=1", "--no-print-directory"]
+        build_cmd = ["make", "-C", f"{DEVKA}/dvm", f"IMAGE_NAME={image}", f"OSNICK={os_nick}", f"OS={dim}", "FAST=1", "--no-print-directory"]
         if devka_user:
             build_cmd += [f"DEVKA_USER={devka_user}"]
         if local:
